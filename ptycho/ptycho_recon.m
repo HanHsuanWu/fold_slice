@@ -316,7 +316,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     end
                                    
     p.   cSAXS_matlab_path = '';                                % cSAXS base package path
-    p.   ptycho_package_path = pwd;                              % ptycho package path. If empty it uses fullfile(p.base_path,
+    p.   ptycho_package_path = strrep(pwd,'\','/');                              % ptycho package path. If empty it uses fullfile(p.base_path,
 
     p.   raw_data_path{1} = '';                                 % Default using compile_x12sa_filename, used only if data should be prepared automatically
     p.   prepare_data_path = '';                                % Default: base_path + 'analysis'. Other example: '/afs/psi.ch/project/CDI/cSAXS_project/analysis2/'; also supports %u to insert the scan number at a later point (e.g. '/afs/psi.ch/project/CDI/cSAXS_project/analysis2/S%.5u')

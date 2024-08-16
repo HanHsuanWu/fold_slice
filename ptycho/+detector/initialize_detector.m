@@ -107,7 +107,6 @@ if (~isempty(p.detector.check_2_detpos))
     end
 end
 
-
 if p.detectors(ii).params.data_stored
     p.raw_data_path_full{ii} = p.detectors(ii).funcs.get_dir_path(p, ii);
 end

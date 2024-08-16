@@ -198,7 +198,6 @@ finishup = utils.onCleanup(@(x) ptycho_exit(x), p);
                 verbose(1, 'Calling engine %s', p.engines{ieng}.name)
                 verbose(struct('prefix', {p.engines{ieng}.name}))
                 
-    
                 [p, fdb] = core.run_engine(p,ieng);
                 if fdb.status.status ~= 0
                     error('Engine %s returned with exit status %d from %s [%d].\n', p.engines{ieng}.name, fdb.status.status, fdb.status.ln(1).name, fdb.status.ln(1).line);

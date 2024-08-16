@@ -57,6 +57,7 @@
 
 function data_path = get_dir_path(p, ii)
 
+
 data_path = sprintf([p.raw_data_path{ii} p.detectors(ii).params.basepath_dir p.detectors(ii).params.read_path_format],  p.scan_number(ii));
 
 

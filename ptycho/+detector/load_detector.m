@@ -60,7 +60,7 @@ import utils.verbose
 
 if iscell(p.detector.name)
     % multiple detectors
-    keyboard
+
 else
     p .detectors = struct();  % first clean anything stored in the detector structure
     for ii=1:length(p.scan_number)

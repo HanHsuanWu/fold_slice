@@ -13,8 +13,11 @@ detStorage = p.detectors(p.scanID).detStorage;
 detStorage.files = [];
 
 for ii = 1:p.numscans
-    %detStorage.files{ii} = strcat(p.base_path,sprintf(p.scan.format, p.scan_number(ii)),'/data_dp.hdf5');  
-    detStorage.files{ii} = strcat(p.base_path,sprintf(p.scan.format, p.scan_number(ii)),'/data_roi',p.scan.roi_label,'_dp.hdf5');   
+    %detStorage.files{ii} = strcat(p.base_path,sprintf(p.scan.format, p.scan_number(ii)),'/data_dp.hdf5');
+
+    tempfile = fullfile(strcat(p.base_path,sprintf(p.scan.format, p.scan_number(ii)),'/data_roi',p.scan.roi_label,'_dp.hdf5'));
+    detStorage.files{ii} = strrep(tempfile,'\','/'); 
+    %strcat(p.base_path,sprintf(p.scan.format, p.scan_number(ii)),'/data_roi',p.scan.roi_label,'_dp.hdf5');   
 
 end
 

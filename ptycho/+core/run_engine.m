@@ -78,6 +78,7 @@ function [p, fdb] = run_engine(p, ieng)
     %% call engine
     core.engine_status(0);
     engine_fnct = str2func(['engines.' p.engines{ieng}.name]);
+
     [p_eng, fdb] = engine_fnct(p_eng);
     %% adjust output, remove items in p.engines{ieng} from p
     for item=1:size(items,1)

@@ -145,6 +145,6 @@ end
 if nargin==3
     paramInfo = strcat(paramInfo,extra);
 end
+outputDir = strrep(fullfile(resultDir,'/',paramInfo,'/'),'\','/');
 
-outputDir = strcat(resultDir,'/',paramInfo,'/');
 end

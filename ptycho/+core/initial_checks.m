@@ -235,7 +235,6 @@ if ~isfield(p.io, 'data_compression')
     p.io.data_compression = 3;
 end
 
-
 % run name
 if ~check_option(p, 'run_name')
     % check if prefix is defined 

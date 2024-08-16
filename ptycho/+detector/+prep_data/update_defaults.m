@@ -81,7 +81,6 @@ if ~isempty(p.io.default_mask_file)
 end
 
 
-
 %% update all default functions
 func_path = fullfile(p.ptycho_matlab_path, '+detector', '+prep_data');
 if ~exist(func_path, 'dir')

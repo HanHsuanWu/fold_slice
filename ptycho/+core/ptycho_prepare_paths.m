@@ -68,7 +68,7 @@ if init
     verbose(p.verbose_level);
 
     verbose(1, 'Preparing paths.')
-
+    
     % base paths
     if isempty(p.base_path)
         p.base_path = './';
@@ -106,7 +106,7 @@ if init
     % do some basic corrections of the paths 
     for path = {'base_path', 'ptycho_matlab_path', 'cSAXS_matlab_path', 'prepare_data_path', 'positions_file'}
         if isfield(p, path{1}) && ~isempty(p.(path{1}))
-            p.(path{1}) = abspath(p.(path{1}));
+            p.(path{1}) = strrep(abspath(p.(path{1})),'\','/');
         end
     end
 
@@ -133,7 +133,6 @@ if init
         verbose(1,'Nonexistent cSAXS_matlab_path: "%s"', p.cSAXS_matlab_path)
     end
     verbose(p.verbose_level);
-
     
 else
     
@@ -147,11 +146,11 @@ else
     for ii = 1:length(p.scan_number)
         p.   scan_str{ii} = sprintf(p.scan_string_format, p.scan_number(ii));        % Scan string
     end
-    
+
     if isempty(p.save_path) || iscell(p.save_path)&&isempty(p.save_path{1})
         verbose(3, 'Using default save_path');
         for ii = 1:length(p.scan_number)
-            p.save_path{ii} = fullfile(p.base_path, 'analysis',utils.compile_aps_dirname(p.scan_number(ii)),'');
+            p.save_path{ii} = strrep(fullfile(p.base_path, 'analysis',utils.compile_aps_dirname(p.scan_number(ii)),''),'\','/');
             if ~exist(p.save_path{ii}, 'dir')
                 mkdir(p.save_path{ii})
             end
@@ -219,13 +218,14 @@ else
             p.prepare_data_path = fullfile(p.prepare_data_path, p.scan_str{1});
         end
     end
-        p.prepare_data_path = replace(p.prepare_data_path,'\','\\');
-        p.prepare_data_path = add_delimiter(p.prepare_data_path);
+        % Don't think we need this Han_hsuan
+        %p.prepare_data_path = add_delimiter(p.prepare_data_path);
+       
+
     if ~exist(p.prepare_data_path, 'dir')
         mkdir(p.prepare_data_path)
     end
     verbose(2, 'prepare_data_path = %s', p.prepare_data_path);
-    
     
     
     % prepare data filename
