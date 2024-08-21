@@ -574,7 +574,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     
     resultDir = strcat(param_input.output_dir_base, sprintf(p.scan_string_format, p.scan_number));
     if ~isempty(p.scan.roi_label); resultDir = [resultDir,'/roi', p.scan.roi_label]; end
-    resultDir = fullfile(resultDir,'/', param_input.output_dir_prefix);
+    resultDir = strrep(fullfile(resultDir,'/', param_input.output_dir_prefix),'\','/');
     
     eng.extraPrintInfo = strcat('Scan',num2str(p.scan_number(1)));
     [eng.fout, p.suffix] = generateResultDir(eng, resultDir, param_input.output_dir_suffix);

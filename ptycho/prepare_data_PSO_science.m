@@ -6,7 +6,7 @@ rbf=149.3/2; % radius of center disk in pixels
 alpha=25.0 ; %convergence angle in mrad
 scan_number = 1; %Ptychoshelves needs
 
-data_dir = 'C:\Users\PanGroupWorkstation\Desktop\hanhsuanwu\PtychoShelves_EM-1.0\ptycho\20240806BTO40uc\Trial1 underfocus 5nm\'; %change this
+data_dir = 'D:\Wuhanhsuan\20240806BTO Trial8 defect\'; %change this
 data_dir = strrep(data_dir, '\', '/'); % needed this to avoid having \U
 cbed_strut=load(strcat(data_dir,'Spectrum Image EELS Image.mat'));
 dp= cat(4,cbed_strut.data1,cbed_strut.data2);

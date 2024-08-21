@@ -3,32 +3,34 @@ addpath(strcat(pwd,'/utils/'))
 addpath(core.find_base_package)
 
 %%%%%%%%%%%%%%%%%%%% data parameters %%%%%%%%%%%%%%%%%%%%
-base_path = '/your/project/directory/PrScO3/science/';
-roi_label = '0_Ndp128';
+base_path = 'D:\Wuhanhsuan\20240806BTO Trial8 defect\';
+base_path = strrep(base_path,'\','/');
+roi_label = '0_Ndp360';
 scan_number = 1;
 scan_string_format = '%01d';
-Ndpx = 128;  % size of cbed
-alpha0 = 21.4; % semi-convergence angle (mrad)
-rbf = 26; % radius of the BF disk in cbed. Can be used to calculate dk
-voltage = 300;
+Ndpx = 360;  % size of cbed
+alpha0 = 24.35; % semi-convergence angle (mrad)
+rbf = 149.3/2; % radius of the BF disk in cbed. Can be used to calculate dk
+voltage = 100;
 rot_ang = 0; %angle between cbed and scan coord.
 
-scan_step_size = 0.41; %angstrom
-N_scan_y = 64; %number of scan points
-N_scan_x = 64;
+scan_step_size = 0.4; %angstrom
+N_scan_y = 100; %number of scan points
+N_scan_x = 100;
 %%%%%%%%%%%%%%%%%%%% reconstruction parameters %%%%%%%%%%%%%%%%%%%%
 gpu_id = 1;
-Niter_save_results = 50;
-Niter_plot_results = 50;
+Niter_save_results = 10;
+Niter_plot_results = 10;
 
-Nprobe = 8; % # of probe modes
-thickness = 210; % sample thickness in angstrom
-Nlayers = 21; % # of slices for multi-slice, 1 for single-slice
+Nprobe = 5; % # of probe modes
+thickness = 164; % sample thickness in angstrom
+Nlayers = 20; % # of slices for multi-slice, 1 for single-slice
 delta_z = thickness / Nlayers;
 
+TotalNiter = 100;
 %% %%%%%%%%%%%%%%%%%% initialize data parameters %%%%%%%%%%%%%%%%%%%%
 p = struct();
-p.   verbose_level = 2;                            % verbosity for standard output (0-1 for loops, 2-3 for testing and adjustments, >= 4 for debugging)
+p.   verbose_level = 3;                            % verbosity for standard output (0-1 for loops, 2-3 for testing and adjustments, >= 4 for debugging)
 p.   use_display = false;                          % global switch for display, if [] then true for verbose > 1
 p.   scan_number = scan_number;                    % Multiple scan numbers for shared scans
 
@@ -117,10 +119,10 @@ p.   io.file_compression = 0;                               % reconstruction fil
 p.   io.data_compression = 3;                               % prepared data file compression for HDF5 files; 0 for no compression
 p.   io.load_prep_pos = false;                              % load positions from prepared data file and ignore positions provided by metadata
 
-p.   io.data_descriptor = 'PSO multislice';                     %added by YJ. A short string that describe data when sending notifications 
-p.   io.phone_number = '';                      % phone number for sending messages
+p.   io.data_descriptor = 'multislice';                     %added by YJ. A short string that describe data when sending notifications 
+p.   io.phone_number = '9383009090';                      % phone number for sending messages
 p.   io.send_failed_scans_SMS = false;                       % send message if p.queue_max_attempts is exceeded
-p.   io.send_finished_recon_SMS = false;                    % send message after the reconstruction is completed
+p.   io.send_finished_recon_SMS = true;                    % send message after the reconstruction is completed
 p.   io.send_crashed_recon_SMS = false;                     % send message if the reconstruction crashes
 p.   io.SMS_sleep = 1800;                                   % max 1 message per SMS_sleep seconds
 p.   io.script_name = mfilename;                             % added by YJ. store matlab script name
@@ -135,8 +137,8 @@ p.   initial_iterate_object_file{1} = '';                   %  use this mat-file
 
 % Initial iterate probe
 p.   model_probe = true;                                   % Use model probe, if false load it from file 
-p.   model.probe_alpha_max = 21.4;                          % Model STEM probe's aperture size
-p.   model.probe_df = -200;                                 % Model STEM probe's defocus
+p.   model.probe_alpha_max = 25;                          % Model STEM probe's aperture size
+p.   model.probe_df = 50;                                 % Model STEM probe's defocus
 p.   model.probe_c3 = 0;                                    % Model STEM probe's third-order spherical aberration in angstrom
 p.   model.probe_c5 = 0;                                    % Model STEM probe's fifth-order spherical aberration in angstrom
 p.   model.probe_c7 = 0;                                    % Model STEM probe's seventh-order spherical aberration in angstrom
@@ -196,8 +198,8 @@ p.   save.store_images_ids = 1:4;                           % identifiers  of th
 p.   save.store_images_format = 'png';                      % data type of the stored images jpg or png 
 p.   save.store_images_dpi = 150;                           % DPI of the stored bitmap images 
 p.   save.exclude = {'fmag', 'fmask', 'illum_sum'};         % exclude variables to reduce the file size on disk
-p.   save.save_reconstructions_intermediate = false;        % save final object and probes after each engine
-p.   save.save_reconstructions = false;                      % save reconstructed object and probe when full reconstruction is finished 
+p.   save.save_reconstructions_intermediate = true;        % save final object and probes after each engine
+p.   save.save_reconstructions = true;                      % save reconstructed object and probe when full reconstruction is finished 
 p.   save.output_file = 'h5';                               % data type of reconstruction file; 'h5' or 'mat'
 
 %% %%%%%%%%%%%%%%%%%% initialize reconstruction parameters %%%%%%%%%%%%%%%%%%%%
@@ -211,13 +213,13 @@ eng. gpu_id = gpu_id;                      % default GPU id, [] means choosen by
 eng. check_gpu_load = true;            % check available GPU memory before starting GPU engines 
 
 % general
-eng. number_iterations = 200;          % number of iterations for selected method 
-eng. asize_presolve = [];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
+eng. number_iterations = TotalNiter;          % number of iterations for selected method 
+eng. asize_presolve = [256,256];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
 eng. align_shared_objects = false;     % before merging multiple unshared objects into one shared, the object will be aligned and the probes shifted by the same distance -> use for alignement and shared reconstruction of drifting scans  
 
 eng. method = 'MLs';                   % choose GPU solver: DM, ePIE, hPIE, MLc, Mls, -- recommended are MLc and MLs
 eng. opt_errmetric = 'L1';            % optimization likelihood - poisson, L1
-eng. grouping = 64;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
+eng. grouping = 128;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
                                        % * for hPIE, ePIE, MLs methods smaller blocks lead to faster convergence, 
                                        % * for MLc the convergence is similar 
                                        % * for DM is has no effect on convergence
@@ -252,7 +254,7 @@ eng. probe_regularization = 0.1;      % Weight factor for the probe update (iner
 % ADVANCED OPTIONS                     See for more details: Odstrčil M, et al., Optics express. 2018 Feb 5;26(3):3108-23.
 % position refinement 
 eng. apply_subpix_shift = true;       % apply FFT-based subpixel shift, it is automatically allowed for position refinement
-eng. probe_position_search = 50;      % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
+eng. probe_position_search = 25;      % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
 %eng. probe_geometry_model = {'scale', 'asymmetry', 'rotation', 'shear'};  % list of free parameters in the geometry model, choose from: {'scale', 'asymmetry', 'rotation', 'shear'}
 eng. probe_geometry_model = {};  % list of free parameters in the geometry model, choose from: {'scale', 'asymmetry', 'rotation', 'shear'}
 eng. probe_position_error_max = inf; % maximal expected random position errors, probe prositions are confined in a circle with radius defined by probe_position_error_max and with center defined by original positions scaled by probe_geometry_model
@@ -305,7 +307,7 @@ eng.apply_tilted_plane_correction = ''; % if any(p.sample_rotation_angles([1,2])
 eng.plot_results_every = Niter_plot_results;
 eng.save_results_every = Niter_save_results;
 eng.save_images ={'obj_ph_stack','obj_ph_sum','probe','probe_mag','probe_prop_mag'};
-eng.extraPrintInfo = strcat('PSO');
+eng.extraPrintInfo = strcat('BTO');
 
 resultDir = strcat(p.base_path,sprintf(p.scan.format, p.scan_number),'/roi',p.scan.roi_label,'/');
 [eng.fout, p.suffix] = generateResultDir(eng, resultDir);
@@ -314,14 +316,15 @@ resultDir = strcat(p.base_path,sprintf(p.scan.format, p.scan_number),'/roi',p.sc
 [p, ~] = core.append_engine(p, eng);    % Adds this engine to the reconstruction process
 
 %% refined reconstruction at full resolution
-eng. number_iterations = 200;          % number of iterations for selected method 
-eng. asize_presolve = [256, 256];              % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
-eng. grouping = 32;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
+eng. number_iterations = 100;          % number of iterations for selected method 
+eng. asize_presolve = [360, 360];              % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
+eng. grouping = 128;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
                                        % * for hPIE, ePIE, MLs methods smaller blocks lead to faster convergence, 
                                        % * for MLc the convergence is similar 
                                        % * for DM is has no effect on convergence
-eng. probe_change_start = 10;          % Start updating probe at this iteration number
-eng. probe_position_search = 50;       % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
+p.   save.save_reconstructions = true;
+eng. probe_change_start = 5;          % Start updating probe at this iteration number
+eng. probe_position_search = 25;       % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
 
 [eng.fout, p.suffix] = generateResultDir(eng, resultDir);
 

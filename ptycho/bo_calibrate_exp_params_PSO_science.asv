@@ -81,8 +81,8 @@ par.rot_ang = -4.76;
 par.alpha_max = 24.35;
 par.GPU_list = [1];
 
-defocus = optimizableVariable('defocus', [-120, 10]); %angstroms
-rot_ang = optimizableVariable('rot_ang', [-10, 0]); %angstroms
+defocus = optimizableVariable('defocus', [-100, 10]); %angstroms
+rot_ang = optimizableVariable('rot_ang', [-5, 5]); %angstroms
 
 N_workers = length(par.GPU_list);
 if N_workers>1

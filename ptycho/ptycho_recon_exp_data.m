@@ -74,7 +74,7 @@ function [output_dir_suffix] = generate_output_dir_suffix(output_dir_suffix, par
                 case 'rot_ang'
                     par_format = '_rot_ang%0.1f';
                 case 'alpha_max'
-                    par_format = '_alpha%0.2mrad';
+                    par_format = '_alpha%0.2fAmrad';
             end
             output_dir_suffix = strrep(sprintf([output_dir_suffix, par_format], param_var{i+1}), '\', '/');
         end
