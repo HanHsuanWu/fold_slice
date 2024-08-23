@@ -2,15 +2,15 @@
 addpath(strcat(pwd,'/utils/'))
 addpath(core.find_base_package)
 utils.ccc
-%% Step 0: Run the prepare_data script to generate data for ptycho reconstruction
-%% Step 1: Prepare data and reconstruction parameters
+% Step 0: Run the prepare_data script to generate data for ptycho reconstruction
+% Step 1: Prepare data and reconstruction parameters
 par = {};
 par.verbose_level = 2;
 par.scan_number = 1;
 par.beam_source = 'electron';
 
 par.Ndp = 128;
-par.base_path = '/your/project/directory/mose2/nat_comm/';
+par.base_path = 'D:/Wuhanhsuan/MoSe2_nature_comm/';
 
 par.scan_format = 'scan%d';
 par.scan_string_format = 'scan%d';
@@ -54,9 +54,9 @@ par.apply_multimodal_update = true;
 
 %% Step 1.5 (optional): Run a single reconstruction to check parameters
 clc
-par.GPU_list = 2;
-defocus = -450;
-par.rot_ang = 30;
+par.GPU_list = 1;
+defocus = -500;
+par.rot_ang = -30;
 par.alpha_max = 21.4;
 par.thickness = 0; %single-slice ptycho
 par.output_dir_suffix_base = sprintf('_rot_ang%0.1f', par.rot_ang);

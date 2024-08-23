@@ -34,6 +34,7 @@ end
 
 if param.probe_position_search < param.number_iterations
     paramInfo = strcat(paramInfo,'_pc',num2str(param.probe_position_search));
+
     if isfield(param,'apply_relaxed_position_constraint') && ~param.apply_relaxed_position_constraint
         paramInfo = strcat(paramInfo,'_noModel');    
     elseif ~isempty(param.probe_geometry_model)

@@ -1,8 +1,9 @@
 addpath(strcat(pwd,'/utils/'))
+addpath(strcat(pwd,'/diagnosis/utils'))
 
-%% 1. Load a .mat reconstruction file w. multiple probe modes 
+% 1. Load a .mat reconstruction file w. multiple probe modes 
 
-%% 2. Calculate power percentage of each probe mode
+% 2. Calculate power percentage of each probe mode
 N_probes = size(probe,3);
 power = zeros(N_probes,1);
 for i = 1:N_probes

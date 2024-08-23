@@ -80,11 +80,21 @@ else
     detStorage.fmask = detStorage.mask(detStorage.lim_inf(1):detStorage.lim_sup(1), detStorage.lim_inf(2):detStorage.lim_sup(2),:);
 end
 
+
 if ~isempty(detParams.mask_saturated_value)
     detStorage.fmask = (detStorage.data < detParams.mask_saturated_value) .* detStorage.fmask;
 end
 if ~isempty(detParams.mask_below_value)
     detStorage.fmask = (detStorage.data > detParams.mask_below_value) .* detStorage.fmask;
+end
+
+%if the pixel intensity is 0 after summing all diffraction patterns then
+%mask them added by Han-Hsuan
+
+if isfield(detParams, 'mask_unwarp')
+    if detParams.mask_unwarp
+        detStorage.fmask = (sum(detStorage.data,3) ~= 0) .* detStorage.fmask;
+    end
 end
 
 %% (Fourier ptycho specific option)

@@ -1,5 +1,5 @@
 % Wrapper function for reconstructing experimental ptychography data
-% Can be used with BO-GP to calibrate experimental parameters
+% Can be used with BO-GP to calibrate experimental parametersu
 % 
 % Output:
 %  ++ data_error - averaged data error of last iteration
@@ -56,7 +56,7 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     if strcmp(par_recon.eng_name, 'GPU_MS') && par.thickness > 0
         par_recon.delta_z = par.thickness / par_recon.Nlayers;
     end
-    
+
     [~, ~, data_error] = ptycho_recon(par_recon);
 
 end

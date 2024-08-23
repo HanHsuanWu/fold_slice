@@ -7,6 +7,7 @@ for ii = 1:p.numscans
     positions_real = zeros(0,2); 
     switch p.scan.type
         case 'raster'
+            
             scan_order_x = 1:p.scan.nx;
             scan_order_y = 1:p.scan.ny;
             % Added by ZC: flip positions similar to eng.custom_data_flip in GPU engines
@@ -27,11 +28,12 @@ for ii = 1:p.numscans
                     positions_real(end+1,:) = xy; %#ok<AGROW>
                 end
             end
-            
+
+
             if isfield(p.scan, 'custom_flip') && p.scan.custom_flip(3) % switch x/y by ZC
             	positions_real=fliplr(positions_real);
             end
-            
+        
         case 'round'
             dr = (p.scan.radius_out - p.scan.radius_in)/ p.scan.nr;
             for ir=1:p.scan.nr+1

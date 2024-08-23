@@ -31,11 +31,11 @@ par.scan_ny = 100;
 par.scan_step_size_x = 0.4;
 par.scan_step_size_y = 0.4;
 
-par.scan_custom_fliplr = 1;
-par.scan_custom_flipud = 1;
-par.scan_custom_transpose = 1;
+par.scan_custom_fliplr = 0;
+par.scan_custom_flipud = 0;
+par.scan_custom_transpose = 0;
 
-par.detector_name = 'empad';
+par.detector_name = 'ELA';
 par.data_preparator = 'matlab_aps';
 par.src_positions =  'matlab_pos';
 par.scan_type = 'raster';
@@ -44,30 +44,30 @@ par.use_model_probe = true;
 par.normalize_init_probe = true;
 
 par.output_dir_base = par.base_path;
-par.Niter = 15;
-par.Niter_save_results_every = par.Niter;
+par.Niter = 100;
+par.Niter_save_results_every = 100;
 par.save.save_reconstructions = true;
 
 par.eng_name = 'GPU_MS';
-par.method = 'MLs';
-par.momentum = 0;
+par.method = 'MLc';
+par.momentum = 0.5;
 
-par.Nprobe = 5;
-par.grouping = 128;
+par.Nprobe = 2;
+par.grouping = inf;
 par.apply_multimodal_update = false;
 
-par.Nlayers = 20;
+par.Nlayers = 1;
 par.regularize_layers = 1;
 par.variable_probe_modes = 1;
 par.Ndp_presolve = 360;
 
 %% Step 1.5 (optional): Run a single reconstruction to check parameters
 par.GPU_list = 1;
-par.rot_ang = 0;
+par.rot_ang = 91.5;
 par.alpha_max = 24.35;
 
-defocus = 18.6; %overfocus is negative
-thickness = 164; %in angstroms
+defocus = 100; %overfocus is negative
+par.thickness = 164; %in angstroms
 
 output_dir_suffix_base = '';
 par.output_dir_suffix_base = strrep(output_dir_suffix_base,'\','/');
@@ -77,12 +77,11 @@ par.output_dir_suffix_base = strrep(output_dir_suffix_base,'\','/');
 %% Step 2: Use Bayesian optimization with Gaussian processes to find experimental parameters that minimize data error
 % Note: Parallel BO is generally recommended for multislice reconstructions
 close all
-par.rot_ang = -4.76;
 par.alpha_max = 24.35;
 par.GPU_list = [1];
 
-defocus = optimizableVariable('defocus', [-120, 10]); %angstroms
-rot_ang = optimizableVariable('rot_ang', [-10, 0]); %angstroms
+defocus = optimizableVariable('defocus', [90, 110]); %angstroms
+rot_ang = optimizableVariable('rot_ang', [-180, 180]); %angstroms
 
 N_workers = length(par.GPU_list);
 if N_workers>1
@@ -97,7 +96,7 @@ results = bayesopt(fun, [defocus, rot_ang],...
     'Verbose', 4,...
     'AcquisitionFunctionName', 'expected-improvement-plus',...
     'IsObjectiveDeterministic', false,...
-    'MaxObjectiveEvaluations', 10,...
+    'MaxObjectiveEvaluations', 30,...
     'NumSeedPoints', N_workers,...
     'PlotFcn', {@plotObjectiveModel, @plotMinObjective}, 'UseParallel', N_workers>1);
 

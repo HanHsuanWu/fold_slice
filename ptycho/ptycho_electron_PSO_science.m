@@ -12,19 +12,19 @@ Ndpx = 360;  % size of cbed
 alpha0 = 24.35; % semi-convergence angle (mrad)
 rbf = 149.3/2; % radius of the BF disk in cbed. Can be used to calculate dk
 voltage = 100;
-rot_ang = 0; %angle between cbed and scan coord.
+rot_ang = 91.5; %angle between cbed and scan coord.
 
 scan_step_size = 0.4; %angstrom
 N_scan_y = 100; %number of scan points
 N_scan_x = 100;
 %%%%%%%%%%%%%%%%%%%% reconstruction parameters %%%%%%%%%%%%%%%%%%%%
 gpu_id = 1;
-Niter_save_results = 10;
-Niter_plot_results = 10;
+Niter_save_results = 20;
+Niter_plot_results = 20;
 
-Nprobe = 5; % # of probe modes
+Nprobe = 2; % # of probe modes
 thickness = 164; % sample thickness in angstrom
-Nlayers = 20; % # of slices for multi-slice, 1 for single-slice
+Nlayers = 1; % # of slices for multi-slice, 1 for single-slice
 delta_z = thickness / Nlayers;
 
 TotalNiter = 100;
@@ -55,7 +55,7 @@ p.   src_metadata = 'none';                                 % source of the meta
 p.   queue.lockfile = false;                                % If true writes a lock file, if lock file exists skips recontruction
 
 % Data preparation
-p.   detector.name = 'empad';                           % see +detectors/ folder 
+p.   detector.name = 'ELA';                           % see +detectors/ folder 
 p.   detector.check_2_detpos = [];                          % = []; (ignores)   = 270; compares to dettrx to see if p.ctr should be reversed (for OMNY shared scans 1221122), make equal to the middle point of dettrx between the 2 detector positions
 p.   detector.data_prefix = '';                             % Default using current eaccount e.g. e14169_1_
 p.   detector.binning = false;                              % = true to perform 2x2 binning of detector pixels, for binning = N do 2^Nx2^N binning
@@ -87,7 +87,7 @@ p.   scan.nx = N_scan_x;        %size(dp,3)                                  % r
 p.   scan.ny = N_scan_y;                                          % raster scan: number of steps in y
 p.   scan.step_size_x = scan_step_size;                               % raster scan: step size (grid spacing)
 p.   scan.step_size_y = scan_step_size;                               % raster scan: step size (grid spacing)
-p.   scan.custom_flip = [1,1,1];                            % raster scan: apply custom flip [fliplr, flipud, transpose] to positions- similar to eng.custom_data_flip in GPU engines. Added by ZC.
+p.   scan.custom_flip = [0,1,0];                            % raster scan: apply custom flip [fliplr, flipud, transpose] to positions- similar to eng.custom_data_flip in GPU engines. Added by ZC.
 p.   scan.step_randn_offset = 0;                            % raster scan: relative random offset from the ideal periodic grid to avoid the raster grid pathology 
 p.   scan.b = 0;                                            % fermat: angular offset
 p.   scan.n_max = 1e4;                                      % fermat: maximal number of points generated 
@@ -120,7 +120,7 @@ p.   io.data_compression = 3;                               % prepared data file
 p.   io.load_prep_pos = false;                              % load positions from prepared data file and ignore positions provided by metadata
 
 p.   io.data_descriptor = 'multislice';                     %added by YJ. A short string that describe data when sending notifications 
-p.   io.phone_number = '9383009090';                      % phone number for sending messages
+p.   io.phone_number = '';                      % phone number for sending messages
 p.   io.send_failed_scans_SMS = false;                       % send message if p.queue_max_attempts is exceeded
 p.   io.send_finished_recon_SMS = true;                    % send message after the reconstruction is completed
 p.   io.send_crashed_recon_SMS = false;                     % send message if the reconstruction crashes
@@ -137,8 +137,8 @@ p.   initial_iterate_object_file{1} = '';                   %  use this mat-file
 
 % Initial iterate probe
 p.   model_probe = true;                                   % Use model probe, if false load it from file 
-p.   model.probe_alpha_max = 25;                          % Model STEM probe's aperture size
-p.   model.probe_df = 50;                                 % Model STEM probe's defocus
+p.   model.probe_alpha_max = 24.35;                          % Model STEM probe's aperture size
+p.   model.probe_df = 100;                                 % Model STEM probe's defocus
 p.   model.probe_c3 = 0;                                    % Model STEM probe's third-order spherical aberration in angstrom
 p.   model.probe_c5 = 0;                                    % Model STEM probe's fifth-order spherical aberration in angstrom
 p.   model.probe_c7 = 0;                                    % Model STEM probe's seventh-order spherical aberration in angstrom
@@ -196,10 +196,10 @@ p.   save.store_images = false;                              % Write preview ima
 p.   save.store_images_intermediate = false;                % save images to disk after each engine
 p.   save.store_images_ids = 1:4;                           % identifiers  of the figure to be stored, 1=obj. amplitude, 2=obj. phase, 3=probes, 4=errors, 5=probes spectrum, 6=object spectrum
 p.   save.store_images_format = 'png';                      % data type of the stored images jpg or png 
-p.   save.store_images_dpi = 150;                           % DPI of the stored bitmap images 
+p.   save.store_images_dpi = 200;                           % DPI of the stored bitmap images 
 p.   save.exclude = {'fmag', 'fmask', 'illum_sum'};         % exclude variables to reduce the file size on disk
-p.   save.save_reconstructions_intermediate = true;        % save final object and probes after each engine
-p.   save.save_reconstructions = true;                      % save reconstructed object and probe when full reconstruction is finished 
+p.   save.save_reconstructions_intermediate = false;        % save final object and probes after each engine
+p.   save.save_reconstructions = false;                      % save reconstructed object and probe when full reconstruction is finished 
 p.   save.output_file = 'h5';                               % data type of reconstruction file; 'h5' or 'mat'
 
 %% %%%%%%%%%%%%%%%%%% initialize reconstruction parameters %%%%%%%%%%%%%%%%%%%%
@@ -214,18 +214,18 @@ eng. check_gpu_load = true;            % check available GPU memory before start
 
 % general
 eng. number_iterations = TotalNiter;          % number of iterations for selected method 
-eng. asize_presolve = [256,256];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
+eng. asize_presolve = [360,360];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
 eng. align_shared_objects = false;     % before merging multiple unshared objects into one shared, the object will be aligned and the probes shifted by the same distance -> use for alignement and shared reconstruction of drifting scans  
 
-eng. method = 'MLs';                   % choose GPU solver: DM, ePIE, hPIE, MLc, Mls, -- recommended are MLc and MLs
+eng. method = 'MLc';                   % choose GPU solver: DM, ePIE, hPIE, MLc, Mls, -- recommended are MLc and MLs
 eng. opt_errmetric = 'L1';            % optimization likelihood - poisson, L1
-eng. grouping = 128;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
+eng. grouping = inf;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
                                        % * for hPIE, ePIE, MLs methods smaller blocks lead to faster convergence, 
                                        % * for MLc the convergence is similar 
                                        % * for DM is has no effect on convergence
 eng. probe_modes  = p.probe_modes;                % Number of coherent modes for probe
 eng. object_change_start = 1;          % Start updating object at this iteration number
-eng. probe_change_start = 20;           % Start updating probe at this iteration number
+eng. probe_change_start = 1;           % Start updating probe at this iteration number
 
 % regularizations
 eng. reg_mu = 0;                       % Regularization (smooting) constant ( reg_mu = 0 for no regularization)
@@ -242,10 +242,10 @@ eng. probe_support_fft = false;       % assume that there is not illumination in
 eng. beta_object = 1;                 % object step size, larger == faster convergence, smaller == more robust, should not exceed 1
 eng. beta_probe = 1;                  % probe step size, larger == faster convergence, smaller == more robust, should not exceed 1
 eng. delta_p = 0.1;                   % LSQ dumping constant, 0 == no preconditioner, 0.1 is usually safe, Preconditioner accelerates convergence and ML methods become approximations of the second order solvers 
-eng. momentum = 0;                    % add momentum acceleration term to the MLc method, useful if the probe guess is very poor or for acceleration of multilayer solver, but it is quite computationally expensive to be used in conventional ptycho without any refinement. 
+eng. momentum = 0.5;                    % add momentum acceleration term to the MLc method, useful if the probe guess is very poor or for acceleration of multilayer solver, but it is quite computationally expensive to be used in conventional ptycho without any refinement. 
                                       % The momentum method works usually well even with the accelerated_gradients option.  eng.momentum = multiplication gain for velocity, eng.momentum == 0 -> no acceleration, eng.momentum == 0.5 is a good value
                                       % momentum is enabled only when par.Niter < par.accelerated_gradients_start;
-eng. accelerated_gradients_start = inf; % iteration number from which the Nesterov gradient acceleration should be applied, this option is supported only for MLc method. It is very computationally cheap way of convergence acceleration. 
+eng. accelerated_gradients_start = 20; % iteration number from which the Nesterov gradient acceleration should be applied, this option is supported only for MLc method. It is very computationally cheap way of convergence acceleration. 
 
 % DM
 eng. pfft_relaxation = 0.05;          % Relaxation in the Fourier domain projection, = 0  for full projection 
@@ -254,9 +254,9 @@ eng. probe_regularization = 0.1;      % Weight factor for the probe update (iner
 % ADVANCED OPTIONS                     See for more details: Odstrčil M, et al., Optics express. 2018 Feb 5;26(3):3108-23.
 % position refinement 
 eng. apply_subpix_shift = true;       % apply FFT-based subpixel shift, it is automatically allowed for position refinement
-eng. probe_position_search = 25;      % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
-%eng. probe_geometry_model = {'scale', 'asymmetry', 'rotation', 'shear'};  % list of free parameters in the geometry model, choose from: {'scale', 'asymmetry', 'rotation', 'shear'}
-eng. probe_geometry_model = {};  % list of free parameters in the geometry model, choose from: {'scale', 'asymmetry', 'rotation', 'shear'}
+eng. probe_position_search = inf;      % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
+eng. probe_geometry_model = {'scale', 'asymmetry', 'rotation', 'shear'};  % list of free parameters in the geometry model, choose from: {'scale', 'asymmetry', 'rotation', 'shear'}
+%eng. probe_geometry_model = {};  % list of free parameters in the geometry model, choose from: {'scale', 'asymmetry', 'rotation', 'shear'}
 eng. probe_position_error_max = inf; % maximal expected random position errors, probe prositions are confined in a circle with radius defined by probe_position_error_max and with center defined by original positions scaled by probe_geometry_model
 eng. apply_relaxed_position_constraint = false; % added by YJ. Apply a relaxed constraint to probe positions. default = true. Set to false if there are big jumps in positions.
 eng. update_pos_weight_every = inf; % added by YJ. Allow position weight to be updated multiple times. default = inf: only update once.
@@ -315,22 +315,23 @@ resultDir = strcat(p.base_path,sprintf(p.scan.format, p.scan_number),'/roi',p.sc
 %add engine
 [p, ~] = core.append_engine(p, eng);    % Adds this engine to the reconstruction process
 
-%% refined reconstruction at full resolution
-eng. number_iterations = 100;          % number of iterations for selected method 
+%{
+%%refined reconstruction at full resolution
+eng. number_iterations = 50;          % number of iterations for selected method 
 eng. asize_presolve = [360, 360];              % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
-eng. grouping = 128;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
+eng. grouping = 256;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
                                        % * for hPIE, ePIE, MLs methods smaller blocks lead to faster convergence, 
                                        % * for MLc the convergence is similar 
                                        % * for DM is has no effect on convergence
 p.   save.save_reconstructions = true;
-eng. probe_change_start = 5;          % Start updating probe at this iteration number
-eng. probe_position_search = 25;       % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
+eng. probe_change_start = 1;          % Start updating probe at this iteration number
+eng. probe_position_search = 1;       % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
 
 [eng.fout, p.suffix] = generateResultDir(eng, resultDir);
 
 %add engine
 [p, ~] = core.append_engine(p, eng);    % Adds this engine to the reconstruction process
-
+%}
 %% Run the reconstruction
 tic
 out = core.ptycho_recons(p);

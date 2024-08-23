@@ -582,6 +582,7 @@ function [out, eng, data_error] = ptycho_recon(param)
 
     %% Run the reconstruction
     tic
+    
     out = core.ptycho_recons(p);
     try
         data_error = out.error_metric.value(end);
