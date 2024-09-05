@@ -1,37 +1,58 @@
 clear variables
+scriptfolder = '/mnt/pgo4/pgo4_v1/Han-Hsuan/fold_slice/ptycho';
+scriptfolder = strrep(scriptfolder,'\','/');
+cd(scriptfolder);
+
 addpath(strcat(pwd,'/utils/'))
 addpath(core.find_base_package)
 
-%%%%%%%%%%%%%%%%%%%% data parameters %%%%%%%%%%%%%%%%%%%%
-base_path = 'D:\Wuhanhsuan\20240806BTO Trial1 bulk\';
-base_path = strrep(base_path,'\','/');
-roi_label = '0_Ndp180mask_bin2_crop50x50';
-scan_number = 1;
-scan_string_format = '%01d';
-Ndpx = 180;  % size of cbed
-alpha0 = 25.0; % semi-convergence angle (mrad)
-rbf = 149.3/4; % radius of the BF disk in cbed. Can be used to calculate dk
-voltage = 100;
-rot_ang = 97.9; %angle between cbed and scan coord.
+%Find the best GPU
+% Get the number of GPUs
+numGPUs = gpuDeviceCount;
 
-probe_file = 'D:\Wuhanhsuan\20240806BTO Trial2 bulk\6\roi0_Ndp180mask_bin2_crop40x40\MLs_L1_p8_g20_Ndp180_betaO0.5_betaP0.5_vp1_Ns16_dz10.25_reg1_centerProbe\Niter300.mat';
+% Initialize variables to track the best GPU
+maxMemory = 0;
+bestGPU = 1;
+
+% Loop through each GPU to find the one with the most available memory
+for i = 1:numGPUs
+    gpuInfo = gpuDevice(i);
+    % Update the best GPU based on available memory
+    if gpuInfo.AvailableMemory > maxMemory
+        maxMemory = gpuInfo.AvailableMemory;
+        bestGPU = i;
+    end
+end
+
+%%%%%%%%%%%%%%%%%%%% data parameters %%%%%%%%%%%%%%%%%%%%
+base_path = '/mnt/pgo4/pgo4_v1/Han-Hsuan\Ptychography_test\Trial1_bulk\';
+base_path = strrep(base_path,'\','/');
+roi_label = '0_Ndp360mask_bin1';
+scan_number = 4;
+scan_string_format = '%01d';
+Ndpx = 360;  % size of cbed
+alpha0 = 25.0; % semi-convergence angle (mrad)
+rbf = 149.3/2; % radius of the BF disk in cbed. Can be used to calculate dk
+voltage = 100;
+rot_ang = 76.3; %angle between cbed and scan coord.
+
+probe_file = '/mnt/pgo4/pgo4_v1\Han-Hsuan\Ptychography_test\Trial1_bulk\1\roi0_Ndp180mask_bin2_crop50x50\MLs_L1_p6_g25_Ndp180_vp1_Ns16_dz10.25_reg1_centerProbe_rot_ang76.3\Niter1000.mat';
 probe_file = strrep(probe_file,'\','/');
 probe_file = '';
 
 scan_step_size = 0.4; %angstro
-N_scan_y = 50; %number of scan points
-N_scan_x = 50;
+N_scan_y = 100; %number of scan points
+N_scan_x = 100;
 %%%%%%%%%%%%%%%%%%%% reconstruction parameters %%%%%%%%%%%%%%%%%%%%
-gpu_id = 1;
-Niter_save_results = 50;
-Niter_plot_results = 50;
+Niter_save_results = 100;
+Niter_plot_results = 100;
 
 
-Nprobe = 5; % # of probe modes
+Nprobe = 2; % # of probe modes
 thickness = 164; % sample thickness in angstrom
-Nlayers = 2; % # of slices for multi-slice, 1 for single-slice
+Nlayers = 1; % # of slices for multi-slice, 1 for single-slice
 delta_z = thickness / Nlayers;
-regularize_layers = 1;
+regularize_layers = 1.0;
 
 TotalNiter = 1000;
 % %%%%%%%%%%%%%%%%%% initialize data parameters %%%%%%%%%%%%%%%%%%%%
@@ -220,17 +241,17 @@ eng. name = 'GPU_MS';
 eng. use_gpu = true;                   % if false, run CPU code, but it will get very slow 
 eng. keep_on_gpu = true;               % keep data + projections on GPU, false is useful for large data if DM is used
 eng. compress_data = false;             % use automatic online memory compression to limit need of GPU memory
-eng. gpu_id = gpu_id;                      % default GPU id, [] means choosen by matlab
+eng. gpu_id = bestGPU;                      % default GPU id, [] means choosen by matlab
 eng. check_gpu_load = true;            % check available GPU memory before starting GPU engines 
 
 % general
 eng. number_iterations = TotalNiter;          % number of iterations for selected method 
-eng. asize_presolve = [180,180];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
+eng. asize_presolve = [360,360];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
 eng. align_shared_objects = false;     % before merging multiple unshared objects into one shared, the object will be aligned and the probes shifted by the same distance -> use for alignement and shared reconstruction of drifting scans  
 
 eng. method = 'MLs';                   % choose GPU solver: DM, ePIE, hPIE, MLc, Mls, -- recommended are MLc and MLs
 eng. opt_errmetric = 'L1';            % optimization likelihood - poisson, L1
-eng. grouping = 25;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
+eng. grouping = 20;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
                                        % * for hPIE, ePIE, MLs methods smaller blocks lead to faster convergence, 
                                        % * for MLc the convergence is similar 
                                        % * for DM is has no effect on convergence
@@ -250,14 +271,14 @@ eng. probe_support_fft = false;       % assume that there is not illumination in
 
 % basic recontruction parameters 
 % PIE / ML methods                    % See for more details: Odstrčil M, et al., Optics express. 2018 Feb 5;26(3):3108-23.
-eng. beta_object = 1.0;                 % object step size, larger == faster convergence, smaller == more robust, should not exceed 1
-eng. beta_probe = 1.0;                  % probe step size, larger == faster convergence, smaller == more robust, should not exceed 1
+eng. beta_object = 0.7;                 % object step size, larger == faster convergence, smaller == more robust, should not exceed 1
+eng. beta_probe = 0.7;                  % probe step size, larger == faster convergence, smaller == more robust, should not exceed 1
 eng. beta_LSQ = 0.5;                 %Default is 0.9 use predictive step length                  
-eng. delta_p = 0.1;                   % LSQ dumping constant, 0 == no preconditioner, 0.1 is usually safe, Preconditioner accelerates convergence and ML methods become approximations of the second order solvers 
+eng. delta_p = 0;                   % LSQ dumping constant, 0 == no preconditioner, 0.1 is usually safe, Preconditioner accelerates convergence and ML methods become approximations of the second order solvers 
 eng. momentum = 0;                    % add momentum acceleration term to the MLc method, useful if the probe guess is very poor or for acceleration of multilayer solver, but it is quite computationally expensive to be used in conventional ptycho without any refinement. 
                                       % The momentum method works usually well even with the accelerated_gradients option.  eng.momentum = multiplication gain for velocity, eng.momentum == 0 -> no acceleration, eng.momentum == 0.5 is a good value
                                       % momentum is enabled only when par.Niter < par.accelerated_gradients_start;
-eng. accelerated_gradients_start = 20; % iteration number from which the Nesterov gradient acceleration should be applied, this option is supported only for MLc method. It is very computationally cheap way of convergence acceleration. 
+eng. accelerated_gradients_start = inf; % iteration number from which the Nesterov gradient acceleration should be applied, this option is supported only for MLc method. It is very computationally cheap way of convergence acceleration. 
 
 % DM
 eng. pfft_relaxation = 0.05;          % Relaxation in the Fourier domain projection, = 0  for full projection 
@@ -347,7 +368,7 @@ eng. probe_position_search = 1;       % iteration number from which the engine w
 [p, ~] = core.append_engine(p, eng);    % Adds this engine to the reconstruction process
 %}
 
-%% copy this file to the data directory
+% copy this file to the data directory
 currentFile = [mfilename('fullpath'), '.m'];
 
 % Copy the script to the destination folder
@@ -360,6 +381,8 @@ copyfile(currentFile, strcat(eng.fout,'ptycho_electron_main_script.m'));
 disp('Script copied successfully.');
 
 %% Run the reconstruction
+copyfile ptycho_electron_main_script.m eng.fout;
 tic
 out = core.ptycho_recons(p);
 toc
+
