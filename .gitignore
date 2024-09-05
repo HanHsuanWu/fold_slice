@@ -1,3 +1,5 @@
 # Matlab executable files
 *.mexw64
 *.dat
+/ptycho/utils/.tmp_procID
+*.mexa64

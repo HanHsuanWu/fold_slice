@@ -11,6 +11,7 @@ for ii = 1:p.numscans
             scan_order_x = 1:p.scan.nx;
             scan_order_y = 1:p.scan.ny;
             % Added by ZC: flip positions similar to eng.custom_data_flip in GPU engines
+
             if isfield(p.scan, 'custom_flip') && any(p.scan.custom_flip) 
                 warning('Applying custom scan flip: %i %i %i ', p.scan.custom_flip(1), p.scan.custom_flip(2), p.scan.custom_flip(3))
                 if p.scan.custom_flip(1)
