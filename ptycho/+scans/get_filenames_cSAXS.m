@@ -127,7 +127,8 @@ if isfield(det, 'filename_pattern')
                 end
                 k = k+1;
             end
-            filename_pattern_pos = fullfile(read_path, det.filename_pattern_pos);
+            
+            filename_pattern_pos = strrep(fullfile(read_path, det.filename_pattern_pos),'\','/');
             filename_pos = sprintf(filename_pattern_pos, input_vars{:});
             [~, pos_files] = find_files(filename_pos);
             numpos = size(pos_files,2);

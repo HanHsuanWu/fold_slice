@@ -6,8 +6,11 @@ figure1 = figure('Color',[1 1 1],'OuterPosition',[100 100 1800 600]);
 clf()
 %set(gca,'color','white')
 scale = p.dx_spec; 
-%object_roi = object(p.object_ROI{:},:);
+object_roi = object(p.object_ROI{:},:);
 aobject = angle(object);
+if size(aobject,3) > 1
+    aobject = sum(aobject,3);
+end
 range = sp_quantile(angle(object_roi), [1e-3, 1-1e-3],10);
 aobject = (aobject  - range(1)) / (range(2) - range(1));
 Np_o = size(object);

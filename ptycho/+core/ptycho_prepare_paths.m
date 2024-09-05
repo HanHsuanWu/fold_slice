@@ -202,6 +202,7 @@ else
 
     end
     % Prepare data path
+
     if isempty(p.prepare_data_path)|| iscell(p.prepare_data_path)&&isempty(p.prepare_data_path{1})
         verbose(3, 'Using default prepared data path');
         p.prepare_data_path = p.save_path{1};
@@ -260,7 +261,7 @@ else
         % do some basic replacement to get the real path
         for ii = 1:length( p.raw_data_path)
             p.raw_data_path{ii} = abspath(p.raw_data_path{ii});
-            p.raw_data_path{ii} = sprintf(replace(p.raw_data_path{ii},'\','\\') , p.scan_number(1));
+            p.raw_data_path{ii} = sprintf(strrep(p.raw_data_path{ii},'\','/') , p.scan_number(1));
         end
     else
         prepare_data_full_filename = fullfile(p.prepare_data_path, p.prepare_data_filename);
@@ -268,10 +269,11 @@ else
     end
     
     % do some basic corrections of the paths
+
     for path = {'base_path', 'specfile', 'ptycho_matlab_path', 'cSAXS_matlab_path', 'prepare_data_path'}
-        p.(path{1}) = abspath(p.(path{1}));
+        p.(path{1}) = strrep(abspath(p.(path{1})),'\','/');
     end
-    
+
 end
 end
 

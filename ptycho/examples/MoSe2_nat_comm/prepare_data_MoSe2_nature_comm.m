@@ -6,7 +6,7 @@ addpath(strcat(pwd,'/examples/'));
 % different folder from fold_slice 
 
 %% Step 2: load data
-data_dir = 'D:\Wuhanhsuan\MoSe2_nature_comm\'; %change this
+data_dir = 'Y:\Yiwei Ju\MoSe2_nature_comm\'; %change this
 data_dir = strrep(data_dir,'\','/');
 load(strcat(data_dir,'rawdata_1x_crop.mat'))
 
@@ -35,8 +35,8 @@ save_dir = strcat(data_dir,'scan',num2str(scan_number),'/');
 mkdir(save_dir)
 roi_label = '0_Ndp128';
 saveName = strcat('data_roi',roi_label,'_dp.hdf5');
-%h5create(strcat(save_dir,saveName), '/dp', size(dp),'ChunkSize',[size(dp,1), size(dp,2), 1],'Deflate',4)
-%h5write(strcat(save_dir,saveName), '/dp', dp)
+h5create(strcat(save_dir,saveName), '/dp', size(dp),'ChunkSize',[size(dp,1), size(dp,2), 1],'Deflate',4)
+h5write(strcat(save_dir,saveName), '/dp', dp)
 
 %% Step 5: prepare initial probe
 dx=1/Np_p(1)/dk; %% pixel size in real space (angstrom)
