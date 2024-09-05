@@ -5,36 +5,37 @@ clear
 % https://data.paradim.org/doi/ssmm-2j11/
 % Note: it's a good practice to store data (and reconstructions) in a
 % different folder from fold_slice 
-scriptfolder = 'C:\Users\PanGroupWorkstation\Desktop\hanhsuanwu\fold_slice\ptycho';
-addpath(strcat(pwd,'/utils_electron/'))
+scriptfolder = 'C:\Users\Han-Hsuan\Documents\GitHub\fold_slice\ptycho';
+addpath(strcat(pwd,'\utils_electron from huozhi'))
 
 % Step 2: load data
-data_dir = 'D:\Wuhanhsuan\20240806BTO Trial1 bulk\'; %change this
-data_dir = strrep(data_dir,'\','/')
+data_dir = 'D:\BTO40uc\2024_08_25 BTO 40uc_20mrad2i\Defect02\Trial10 8x8 nm 200x200 0.4A step size overfocus +10nm 10ms defect02\'; %change this
+data_dir = strrep(data_dir,'\','/');
 filename = 'Spectrum Image EELS Image.npy';
 h5_suf = 'mask_bin2_crop50x50';
 scan_number = 1; %Ptychoshelves needs
-bin = 2;
-cutoff = 180;
-crop_idx=[1,50,1,50]; % start from smaller data [lower y, higher y, lower x, higer x]
+bin = 1;
+cutoff = 360;
+crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
+dp_size = 360;
 % load(strcat(data_dir,'s01_R3_0_0.mat'))
 
 % input parameters if they are not included in the mat file
 exp_p = {};
 exp_p.ADU =     1.0;
 exp_p.voltage = 100; % kV
-exp_p.alpha =   25.0; % mrad
+exp_p.alpha =   20.0; % mrad
 [~,lambda] =    electronwavelength(exp_p.voltage);
 %dk =            0.0367;
 exp_p.defocus = -50.0; % Angst.
 exp_p.scan_step_size = 0.4; % Angst.
-exp_p.nv = 180; %final dp pattern size
+exp_p.nv = dp_size; %final dp pattern size
 % exp_p.rot_ang = 20.0;
 
 % calculate pxiel size (1/A) in diffraction plane
 % [~,lambda]=electronwavelength(exp_p.voltage);
 
-exp_p.rbf=149.3/2; % radius of center disk in pixels
+exp_p.rbf=120.0/2; % radius of center disk in pixels
 dk=exp_p.alpha/1e3/exp_p.rbf/lambda;
 %exp_p.rbf = exp_p.alpha/1e3/dk/lambda; % radius of center disk in pixels
 exp_p.scan_number = scan_number;
@@ -60,11 +61,11 @@ elseif strcmp(filename(end-1:end), 'h5')
     dp = io_TEAM(f, 0, 0, 0, 0);
 end
 % dp = dp(2:end,2:end,:,:);
-pacbed = mean(dp, [3 4]);
+% pacbed = mean(dp, [3 4]);
 %figure(); imagesc(pacbed); colorbar; axis image;
 
 dp = applyCircularCutoff(dp, cutoff);
-pacbed = mean(dp, [3 4]);
+%pacbed = mean(dp, [3 4]);
 %figure(); imagesc(pacbed); colorbar; axis image;
 % bin / pad
 %%% bin 4d
@@ -88,7 +89,8 @@ end
 dp = dp / exp_p.ADU; % convert to electron count, contained in the data file
 dp=reshape(dp,Np_p(1),Np_p(2),[]);
 pacbed = mean(dp, 3);
-figure(); 
+figure('Position', [600 200 400 400]);
+%imagesc(pacbed); colorbar; axis image;
 imagesc(pacbed.^0.5); colorbar; axis image;
 Itot=mean(squeeze(sum(sum(dp,1),2))); %need this for normalizting initial probe
 
@@ -100,10 +102,21 @@ centerX = cols / 2;
 centerY = rows / 2;
 radius = exp_p.rbf/bin;  % Adjust the radius as needed
 
-% Draw the circle
+% Draw the circle and it's center
 rectangle('Position', [centerX - radius, centerY - radius, 2*radius, 2*radius], ...
           'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 2);
+
+circle_radius = 2
+rectangle('Position', [centerX - circle_radius/2, centerY - circle_radius/2, circle_radius, circle_radius], ...
+          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 2);
+
 hold off;
+
+%save image
+saveas(gcf,strcat(data_dir,'/cbed.tiff'));
+%% change color bar scale
+%caxis([0 7.5]);
+%{
 
 % Step 4: save CBED in a .hdf5 file (needed by Ptychoshelves)
 % scan_number = 1; %Ptychoshelves needs
@@ -131,3 +144,4 @@ p.detector.binning = false;
 
 %% Step 6: save initial probe
 save(strcat(save_dir,'/init_probe.mat'),'probe','p')
+%}
