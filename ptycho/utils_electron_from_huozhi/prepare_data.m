@@ -9,15 +9,19 @@ scriptfolder = 'C:\Users\Han-Hsuan\Documents\GitHub\fold_slice\ptycho';
 addpath(strcat(pwd,'\utils_electron from huozhi'))
 
 % Step 2: load data
-data_dir = 'D:\BTO40uc\2024_08_25 BTO 40uc_20mrad2i\Defect02\Trial10 8x8 nm 200x200 0.4A step size overfocus +10nm 10ms defect02\'; %change this
+data_dir = 'C:\Users\Han-Hsuan\OneDrive - personalmicrosoftsoftware.uci.edu\ptychography\BTO40uc16nm\20240825 trial3\'; %change this
 data_dir = strrep(data_dir,'\','/');
 filename = 'Spectrum Image EELS Image.npy';
 h5_suf = 'mask_bin2_crop50x50';
 scan_number = 1; %Ptychoshelves needs
-bin = 1;
-cutoff = 360;
+bin = 2;
+cutoff = 220;
 crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
-dp_size = 360;
+% Positive is up and left.
+shift_dp = [8,2]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
+dp_size = 360; % final size of diffraction pattern
+
+
 % load(strcat(data_dir,'s01_R3_0_0.mat'))
 
 % input parameters if they are not included in the mat file
@@ -35,7 +39,7 @@ exp_p.nv = dp_size; %final dp pattern size
 % calculate pxiel size (1/A) in diffraction plane
 % [~,lambda]=electronwavelength(exp_p.voltage);
 
-exp_p.rbf=120.0/2; % radius of center disk in pixels
+exp_p.rbf=118.0/2/bin; % radius of center disk in pixels
 dk=exp_p.alpha/1e3/exp_p.rbf/lambda;
 %exp_p.rbf = exp_p.alpha/1e3/dk/lambda; % radius of center disk in pixels
 exp_p.scan_number = scan_number;
@@ -60,19 +64,28 @@ elseif strcmp(filename(end-2:end), 'mat')
 elseif strcmp(filename(end-1:end), 'h5')
     dp = io_TEAM(f, 0, 0, 0, 0);
 end
-% dp = dp(2:end,2:end,:,:);
+
 % pacbed = mean(dp, [3 4]);
 %figure(); imagesc(pacbed); colorbar; axis image;
 
-dp = applyCircularCutoff(dp, cutoff);
-%pacbed = mean(dp, [3 4]);
-%figure(); imagesc(pacbed); colorbar; axis image;
-% bin / pad
-%%% bin 4d
-if bin > 1
-    dp = bin4d(dp, bin, bin);
-    warning('CBEDs are binned.')
+%crop to center dp
+if shift_dp(1) >= 0
+    row_start = shift_dp(1) + 1;
+    row_end = size(dp, 1);
+else
+    row_start = 1;
+    row_end = size(dp, 1) + shift_dp(1);
 end
+
+if shift_dp(2) >= 0
+    col_start = shift_dp(2) + 1;
+    col_end = size(dp, 2);
+else
+    col_start = 1;
+    col_end = size(dp, 2) + shift_dp(2);
+end
+dp = dp(row_start:row_end, col_start:col_end, :, :);
+
 Np_p = [exp_p.nv,exp_p.nv]; % size of diffraction patterns used during reconstruction. can also pad to 256
 %%% crop data
 dp=dp(:,:,crop_idx(1):crop_idx(2),crop_idx(3):crop_idx(4));
@@ -80,14 +93,30 @@ dp=dp(:,:,crop_idx(1):crop_idx(2),crop_idx(3):crop_idx(4));
 %%% pad cbed
 [ndpy,ndpx,npy,npx]=size(dp);
 if ndpy < Np_p(1) % pad zeros
-    dp=padarray(dp,[(Np_p(1)-ndpy)/2,(Np_p(2)-ndpx)/2,0,0],0,'both');
+    dp=padarray(dp,[(Np_p(1)-ndpy)/2,round((Np_p(2)-ndpx)/2),0,0],0,'both');
 else
     dp=crop_pad(dp,Np_p);
 end
-% calc_rotation(dp)
 
+%cutoff cbed with circular mask
+dp = applyCircularCutoff(dp, cutoff);
+
+% bin / pad
+%%% bin 4d
+if bin > 1
+    dp = bin4d(dp, bin, bin);
+    warning('CBEDs are binned.')
+end
+
+
+%pacbed = mean(dp, [3 4]);
+%figure(); imagesc(pacbed.^0.5); colorbar; axis image;
+%% check rotation and flip 
+calc_rotation(dp)
+
+%%
 dp = dp / exp_p.ADU; % convert to electron count, contained in the data file
-dp=reshape(dp,Np_p(1),Np_p(2),[]);
+dp=reshape(dp,Np_p(1)/bin,Np_p(2)/bin,[]);
 pacbed = mean(dp, 3);
 figure('Position', [600 200 400 400]);
 %imagesc(pacbed); colorbar; axis image;
@@ -100,19 +129,21 @@ Itot=mean(squeeze(sum(sum(dp,1),2))); %need this for normalizting initial probe
 % Define the center and radius of the circle
 centerX = cols / 2;
 centerY = rows / 2;
-radius = exp_p.rbf/bin;  % Adjust the radius as needed
+radius = exp_p.rbf;  % Adjust the radius as needed
 
 % Draw the circle and it's center
 rectangle('Position', [centerX - radius, centerY - radius, 2*radius, 2*radius], ...
           'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 2);
 
-circle_radius = 2
+circle_radius = 2;
 rectangle('Position', [centerX - circle_radius/2, centerY - circle_radius/2, circle_radius, circle_radius], ...
           'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 2);
 
 hold off;
 
-%save image
+
+
+%% save image
 saveas(gcf,strcat(data_dir,'/cbed.tiff'));
 %% change color bar scale
 %caxis([0 7.5]);
