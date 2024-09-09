@@ -9,6 +9,7 @@ if endsWith(data_dir, '.npy')
     % np file
     dp = readNPY(data_dir);
     dp = permute(dp, [3 4 1 2]); % depend on your data
+    dp = transpose(dp) %transpose to correct for nion 
 elseif endsWith(data_dir, '.mat')
     %mat file
     cbed_strut=load(strcat(data_dir,'Spectrum Image EELS Image.mat'));

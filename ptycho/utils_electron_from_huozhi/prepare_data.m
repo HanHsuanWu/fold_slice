@@ -58,6 +58,7 @@ f = strcat(data_dir,filename);
 if strcmp(filename(end-2:end), 'npy')
     dp = readNPY(f);
     dp = permute(dp, [3 4 1 2]);
+    dp = transpose(dp) %transpose to correct for nion 
 elseif strcmp(filename(end-2:end), 'mat')
     load(f)
     dp = m;
