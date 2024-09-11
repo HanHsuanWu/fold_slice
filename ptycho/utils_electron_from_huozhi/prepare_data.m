@@ -6,20 +6,20 @@ clear
 % Note: it's a good practice to store data (and reconstructions) in a
 % different folder from fold_slice 
 scriptfolder = 'C:\Users\Han-Hsuan\Documents\GitHub\fold_slice\ptycho';
-addpath(strcat(pwd,'\utils_electron from huozhi'))
+addpath(strcat(pwd,'\utils_electron_from_huozhi'))
 
 % Step 2: load data
-data_dir = 'C:\Users\Han-Hsuan\OneDrive - personalmicrosoftsoftware.uci.edu\ptychography\BTO40uc16nm\20240825 trial3\'; %change this
+data_dir = 'Y:\Han-Hsuan\Ptychography_test\Trial3_bulk_32mrad\'; %change this
 data_dir = strrep(data_dir,'\','/');
 filename = 'Spectrum Image EELS Image.npy';
-h5_suf = 'mask_bin2_crop50x50';
+h5_suf = 'mask';
 scan_number = 1; %Ptychoshelves needs
-bin = 2;
+bin = 1;
 cutoff = 220;
 crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
 % Positive is up and left.
-shift_dp = [8,2]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
-dp_size = 360; % final size of diffraction pattern
+shift_dp = [8,8]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
+dp_size = 360; % Initial size of diffraction pattern
 
 
 % load(strcat(data_dir,'s01_R3_0_0.mat'))
@@ -28,10 +28,10 @@ dp_size = 360; % final size of diffraction pattern
 exp_p = {};
 exp_p.ADU =     1.0;
 exp_p.voltage = 100; % kV
-exp_p.alpha =   20.0; % mrad
+exp_p.alpha =   32.0; % mrad
 [~,lambda] =    electronwavelength(exp_p.voltage);
 %dk =            0.0367;
-exp_p.defocus = -50.0; % Angst.
+exp_p.defocus = -150.0; % Angst.
 exp_p.scan_step_size = 0.4; % Angst.
 exp_p.nv = dp_size; %final dp pattern size
 % exp_p.rot_ang = 20.0;
@@ -39,7 +39,7 @@ exp_p.nv = dp_size; %final dp pattern size
 % calculate pxiel size (1/A) in diffraction plane
 % [~,lambda]=electronwavelength(exp_p.voltage);
 
-exp_p.rbf=118.0/2/bin; % radius of center disk in pixels
+exp_p.rbf=196.0/2/bin; % radius of center disk in pixels
 dk=exp_p.alpha/1e3/exp_p.rbf/lambda;
 %exp_p.rbf = exp_p.alpha/1e3/dk/lambda; % radius of center disk in pixels
 exp_p.scan_number = scan_number;
@@ -57,8 +57,8 @@ save(strcat(save_dir,'/exp_para', h5_suf, '.mat'),'exp_p');
 f = strcat(data_dir,filename);
 if strcmp(filename(end-2:end), 'npy')
     dp = readNPY(f);
-    dp = permute(dp, [3 4 1 2]);
-    dp = transpose(dp) %transpose to correct for nion 
+    %dp = permute(dp, [3 4 1 2]); %after this permute [ky kx y x]
+    dp = permute(dp, [4 3 1 2]); %transpose the ky kx to correct rotation for nion 
 elseif strcmp(filename(end-2:end), 'mat')
     load(f)
     dp = m;
@@ -109,13 +109,12 @@ if bin > 1
     warning('CBEDs are binned.')
 end
 
-
 %pacbed = mean(dp, [3 4]);
 %figure(); imagesc(pacbed.^0.5); colorbar; axis image;
-%% check rotation and flip 
-calc_rotation(dp)
+% check rotation and flip 
+%calc_rotation(dp)
 
-%%
+%
 dp = dp / exp_p.ADU; % convert to electron count, contained in the data file
 dp=reshape(dp,Np_p(1)/bin,Np_p(2)/bin,[]);
 pacbed = mean(dp, 3);
@@ -146,9 +145,11 @@ hold off;
 
 %% save image
 saveas(gcf,strcat(data_dir,'/cbed.tiff'));
+%% save file
+copyfile([mfilename('fullpath'), '.m'], strcat(data_dir,num2str(scan_number),'/prepare_data.m'));
 %% change color bar scale
 %caxis([0 7.5]);
-%{
+
 
 % Step 4: save CBED in a .hdf5 file (needed by Ptychoshelves)
 % scan_number = 1; %Ptychoshelves needs
@@ -156,6 +157,8 @@ saveas(gcf,strcat(data_dir,'/cbed.tiff'));
 saveName = strcat('data_roi',roi_label,'_dp.hdf5');
 h5create(strcat(save_dir,saveName), '/dp', size(dp),'ChunkSize',[size(dp,1), size(dp,2), 1],'Deflate',4)  % Deflate 为压缩级别
 h5write(strcat(save_dir,saveName), '/dp', dp)
+
+%{
 
 %% Step 5: prepare initial probe
 dx=1/Np_p(1)/dk; %% pixel size in real space (angstrom)
