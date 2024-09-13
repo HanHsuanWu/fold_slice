@@ -29,37 +29,40 @@ for i = 1:numGPUs
 end
 
 %%%%%%%%%%%%%%%%%%%% data parameters %%%%%%%%%%%%%%%%%%%%
-base_path = '/mnt/pgo4/pgo4_v1/Han-Hsuan\Ptychography_test\Trial1_bulk\';
+base_path = '/mnt/pgo4/pgo4_v1/Han-Hsuan\Ptychography_test\AlGaAs_test17\';
 base_path = strrep(base_path,'\','/');
-roi_label = '0_Ndp180mask_bin2_crop50x50';
+%replace windows path to linux
+base_path = strrep(base_path,'Y:/','/mnt/pgo4/pgo4_v1/');
+roi_label = '0_Ndp128_flipud';
 scan_number = 1;
 scan_string_format = '%01d';
-Ndpx = 180;  % size of cbed
-alpha0 = 25.0; % semi-convergence angle (mrad)
-bin = 2;
-rbf = 149.3/2/bin; % radius of the BF disk in cbed. Can be used to calculate dk
-voltage = 100;
-rot_ang = 90.0; %angle between cbed and scan coord.
+Ndpx = 128;  % size of cbed
+alpha0 = 18.9; % semi-convergen1e angle (mrad)
+bin = 1;
+rbf = 50; % radius of the BF disk in cbed. Can be used to calculate dk
+voltage = 200;
+rot_ang = 0; %angle between cbed and scan coord.
+use_model = [true, true]; %[probe, object] if true use model probe, object
 
-probe_file = '/mnt/pgo4/pgo4_v1\Han-Hsuan\Ptychography_test\Trial1_bulk\1\roi0_Ndp180mask_bin2_crop50x50\MLs_L1_p6_g40_Ndp180_betaO0.7_betaP0.7_vp1_Ns16_dz10.25_reg1_centerProbe_rot_ang90\Niter1000.mat';
+probe_file = '/mnt/pgo4/pgo4_v1\Han-Hsuan\Ptychography_test\Trial3_bulk_32mrad\1\roi0_Ndp180mask_bin2\MLs_L1_p6_g25_Ndp180_betaO0.8_betaP0.8_vp1_Ns8_dz20_reg1_centerProbe_rot_ang180\Niter300.mat';
 probe_file = strrep(probe_file,'\','/');
-%probe_file = '';
+probe_file = '';
 
-scan_step_size = 0.4; %angstro
-N_scan_y = 50; %number of scan points
-N_scan_x = 50;
+scan_step_size = 0.346; %angstro
+N_scan_y = 256; %number of scan points
+N_scan_x = 256;
 %%%%%%%%%%%%%%%%%%%% reconstruction parameters %%%%%%%%%%%%%%%%%%%%
-Niter_save_results = 20;
-Niter_plot_results = 20;
+Niter_save_results = 10;
+Niter_plot_results = 10;
 
 
 Nprobe = 6; % # of probe modes
-thickness = 164; % sample thickness in angstrom
-Nlayers = 16; % # of slices for multi-slice, 1 for single-slice
-delta_z = thickness / Nlayers;
-reg_layers = 1.0;
+%thickness = 160; % sample thickness in angstrom
+Nlayers = 20; % # of slices for multi-slice, 1 for single-slice
+delta_z = 20;
+reg_layers = 1;
 
-TotalNiter = 1000;
+TotalNiter = 180;
 % %%%%%%%%%%%%%%%%%% initialize data parameters %%%%%%%%%%%%%%%%%%%%
 p = struct();
 p.   verbose_level = 3;                            % verbosity for standard output (0-1 for loops, 2-3 for testing and adjustments, >= 4 for debugging)
@@ -87,18 +90,18 @@ p.   src_metadata = 'none';                                 % source of the meta
 p.   queue.lockfile = false;                                % If true writes a lock file, if lock file exists skips recontruction
 
 % Data preparation
-p.   detector.name = 'empad';                           % see +detectors/ folder 
+p.   detector.name = 'empad';                               % see +detectors/ folder 
 p.   detector.check_2_detpos = [];                          % = []; (ignores)   = 270; compares to dettrx to see if p.ctr should be reversed (for OMNY shared scans 1221122), make equal to the middle point of dettrx between the 2 detector positions
 p.   detector.data_prefix = '';                             % Default using current eaccount e.g. e14169_1_
 p.   detector.binning = false;                              % = true to perform 2x2 binning of detector pixels, for binning = N do 2^Nx2^N binning
-p.   detector.upsampling = 1;% upsample the measured data by 2^data_upsampling, (transposed operator to the binning), it can be used for superresolution in nearfield ptychography or to account for undersampling in a far-field dataset
+p.   detector.upsampling = false;                           % upsample the measured data by 2^data_upsampling, (transposed operator to the binning), it can be used for superresolution in nearfield ptychography or to account for undersampling in a far-field dataset
 p.   crop_init_probe = true;
 p.   detector.burst_frames = 1;                             % number of frames collected per scan position
 
 p.   prepare.data_preparator = 'matlab_aps';                % data preparator; 'python' or 'matlab' or 'matlab_aps'
 p.   prepare.auto_prepare_data = true;                      % if true: prepare dataset from raw measurements if the prepared data does not exist
 p.   prepare.force_preparation_data = true;                 % Prepare dataset even if it exists, it will overwrite the file % Default: @prepare_data_2d
-p.   prepare.store_prepared_data = false;                    % store the loaded data to h5 even for non-external engines (i.e. other than c_solver)
+p.   prepare.store_prepared_data = false;                   % store the loaded data to h5 even for non-external engines (i.e. other than c_solver)
 p.   prepare.prepare_data_function = '';                    % (used only if data should be prepared) custom data preparation function handle;
 p.   prepare.auto_center_data = false;                      % if matlab data preparator is used, try to automatically center the diffraction pattern to keep center of mass in center of diffraction
 
@@ -116,11 +119,11 @@ p.   scan.nth = 3;                                          % round scan: number
 p.   scan.lx = 20e-6;                                       % round_roi scan: width of the roi
 p.   scan.ly = 20e-6;                                       % round_roi scan: height of the roi
 p.   scan.dr = 1.5e-6;                                      % round_roi scan: shell step size
-p.   scan.nx = N_scan_x;        %size(dp,3)                                  % raster scan: number of steps in x
+p.   scan.nx = N_scan_x;                                    %size(dp,3)                                  % raster scan: number of steps in x
 p.   scan.ny = N_scan_y;                                          % raster scan: number of steps in y
 p.   scan.step_size_x = scan_step_size;                               % raster scan: step size (grid spacing)
 p.   scan.step_size_y = scan_step_size;                               % raster scan: step size (grid spacing)
-p.   scan.custom_flip = [1,0,1];                            % raster scan: apply custom flip [fliplr, flipud, transpose] to positions- similar to eng.custom_data_flip in GPU engines. Added by ZC.
+p.   scan.custom_flip = [1,1,1];                            % raster scan: apply custom flip [fliplr, flipud, transpose] to positions- similar to eng.custom_data_flip in GPU engines. Added by ZC.
 p.   scan.step_randn_offset = 0;                            % raster scan: relative random offset from the ideal periodic grid to avoid the raster grid pathology 
 p.   scan.b = 0;                                            % fermat: angular offset
 p.   scan.n_max = 1e4;                                      % fermat: maximal number of points generated 
@@ -140,7 +143,7 @@ p.   suffix = strcat('ML_recon');              % Optional suffix for reconstruct
 p.   scan_string_format = scan_string_format;                  % format for scan string generation, it is used e.g for plotting and data saving 
 
 %%%p.   base_path = '../../';                                  % base path : used for automatic generation of other paths 
-p.   base_path = base_path;     % base path : used for automatic generation of other paths 
+p.   base_path = base_path;                                 % base path : used for automatic generation of other paths 
 p.   specfile = '';                                         % Name of spec file to get motor positions and check end of scan, defaut is p.spec_file == p.base_path;
 p.   ptycho_matlab_path = '';                               % cSAXS ptycho package path
 p.   cSAXS_matlab_path = '';                                % cSAXS base package path
@@ -166,16 +169,16 @@ p.   artificial_data_file = 'template_artificial_data';     % artificial data pa
 
 % Reconstruction
 % Initial iterate object
-p.   model_object = false;                                   % Use model object, if false load it from file 
+p.   model_object = use_model(2);                                   % Use model object, if false load it from file 
 p.   model.object_type = 'rand';                            % specify how the object shall be created; use 'rand' for a random initial guess; use 'amplitude' for an initial guess based on the prepared data
 p.   initial_iterate_object_file{1} = probe_file;                   %  use this mat-file as initial guess of object, it is possible to use wild characters and pattern filling, example: '../analysis/S%05i/wrap_*_1024x1024_1_recons*'
 p.   multiple_layers_obj = true;
 %p.   initial_iterate_object_file{1} = '';
 
 % Initial iterate probe
-p.   model_probe = true;                                   % Use model probe, if false load it from file 
+p.   model_probe = use_model(1);                                   % Use model probe, if false load it from file 
 p.   model.probe_alpha_max = alpha0;                          % Model STEM probe's aperture size
-p.   model.probe_df = -50;                                 % Model STEM probe's defocus
+p.   model.probe_df = -100;                                 % Model STEM probe's defocus
 p.   model.probe_c3 = 0;                                    % Model STEM probe's third-order spherical aberration in angstrom
 p.   model.probe_c5 = 0;                                    % Model STEM probe's fifth-order spherical aberration in angstrom
 p.   model.probe_c7 = 0;                                    % Model STEM probe's seventh-order spherical aberration in angstrom
@@ -252,17 +255,17 @@ eng. check_gpu_load = true;            % check available GPU memory before start
 
 % general
 eng. number_iterations = TotalNiter;          % number of iterations for selected method 
-eng. asize_presolve = [180,180];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
+eng. asize_presolve = [128,128];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
 eng. align_shared_objects = false;     % before merging multiple unshared objects into one shared, the object will be aligned and the probes shifted by the same distance -> use for alignement and shared reconstruction of drifting scans  
 
 eng. method = 'MLs';                   % choose GPU solver: DM, ePIE, hPIE, MLc, Mls, -- recommended are MLc and MLs
 eng. opt_errmetric = 'L1';            % optimization likelihood - poisson, L1
-eng. grouping = 45;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
+eng. grouping = 64;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
                                        % * for hPIE, ePIE, MLs methods smaller blocks lead to faster convergence, 
                                        % * for MLc the convergence is similar 
                                        % * for DM is has no effect on convergence
 eng. probe_modes  = p.probe_modes;                % Number of coherent modes for probe
-eng. object_change_start = 100;          % Start updating object at this iteration number
+eng. object_change_start = 1;          % Start updating object at this iteration number
 eng. probe_change_start = 1;           % Start updating probe at this iteration number
 
 % regularizations
@@ -270,17 +273,17 @@ eng. reg_mu = 0;                       % Regularization (smooting) constant ( re
 eng. delta = 0;                        % press values to zero out of the illumination area in th object, usually 1e-2 is enough 
 eng. positivity_constraint_object = 0; % enforce weak (relaxed) positivity in object, ie O = O*(1-a)+a*|O|, usually a=1e-2 is already enough. Useful in conbination with OPRP or probe_fourier_shift_search  
 
-eng. apply_multimodal_update = false; % apply all incoherent modes to object, it can cause isses if the modes collect some crap 
+eng. apply_multimodal_update = false;  % apply all incoherent modes to object, it can cause isses if the modes collect some crap 
 eng. probe_backpropagate = 0;         % backpropagation distance the probe mask, 0 == apply in the object plane. Useful for pinhole imaging where the support can be applied  at the pinhole plane
 eng. probe_support_radius = [];       % Normalized radius of circular support, = 1 for radius touching the window    
 eng. probe_support_fft = false;       % assume that there is not illumination intensity out of the central FZP cone and enforce this contraint. Useful for imaging with focusing optics. Helps to remove issues from the gaps between detector modules.
 
 % basic recontruction parameters 
 % PIE / ML methods                    % See for more details: Odstrčil M, et al., Optics express. 2018 Feb 5;26(3):3108-23.
-eng. beta_object = 0.5;                 % object step size, larger == faster convergence, smaller == more robust, should not exceed 1
-eng. beta_probe = 0.5;                  % probe step size, larger == faster convergence, smaller == more robust, should not exceed 1
-eng. beta_LSQ = 0.05;                 %Default is 0.9 use predictive step length                  
-eng. delta_p = 0;                   % LSQ dumping constant, 0 == no preconditioner, 0.1 is usually safe, Preconditioner accelerates convergence and ML methods become approximations of the second order solvers 
+eng. beta_object = 0.8;               % object step size, larger == faster convergence, smaller == more robust, should not exceed 1
+eng. beta_probe = 0.8;                % probe step size, larger == faster convergence, smaller == more robust, should not exceed 1
+eng. beta_LSQ = 0.5;                  % Default is 0.9 use predictive step length                  
+eng. delta_p = 0;                     % LSQ dumping constant, 0 == no preconditioner, 0.1 is usually safe, Preconditioner accelerates convergence and ML methods become approximations of the second order solvers 
 eng. momentum = 0;                    % add momentum acceleration term to the MLc method, useful if the probe guess is very poor or for acceleration of multilayer solver, but it is quite computationally expensive to be used in conventional ptycho without any refinement. 
                                       % The momentum method works usually well even with the accelerated_gradients option.  eng.momentum = multiplication gain for velocity, eng.momentum == 0 -> no acceleration, eng.momentum == 0.5 is a good value
                                       % momentum is enabled only when par.Niter < par.accelerated_gradients_start;
@@ -303,10 +306,10 @@ eng. update_pos_weight_every = inf; % added by YJ. Allow position weight to be u
 % multilayer extension 
 eng. delta_z = delta_z*ones(Nlayers,1);                     % if not empty, use multilayer ptycho extension , see ML_MS code for example of use, [] == common single layer ptychography , note that delta_z provides only relative propagation distance from the previous layer, ie delta_z can be either positive or negative. If preshift_ML_probe == false, the first layer is defined by position of initial probe plane. It is useful to use eng.momentum for convergence acceleration 
 eng. regularize_layers = reg_layers;           % multilayer extension: 0<R<<1 -> apply regularization on the reconstructed object layers, 0 == no regularization, 0.01 == weak regularization that will slowly symmetrize information content between layers 
-eng. preshift_ML_probe = true;       % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
+eng. preshift_ML_probe = true;        % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
 eng. layer4pos = [];                  % Added by ZC. speficy which layer is used for position correction ; if empty, then default, ceil(Nlayers/2)
 eng. init_layer_select = [];          % Added by YJ. Select layers in the initial object for pre-processing. If empty (default): use all layers.
-eng. init_layer_preprocess = '';   % Added by YJ. Specify how to pre-process initial layers
+eng. init_layer_preprocess = '';      % Added by YJ. Specify how to pre-process initial layers
                                       % '' or 'all' (default): use all layers (do nothing)
                                       % 'avg': average all layers 
                                       % 'interp': interpolate layers using spline method. Need to specify desired depths in init_layer_interp
@@ -315,7 +318,7 @@ eng. init_layer_append_mode = '';     % Added by YJ. Specify how to initialize e
                                       % '' or 'vac' (default): add vacuum layers
                                       % 'edge': append 1st or last layers
                                       % 'avg': append averaged layer
-eng. init_layer_scaling_factor = 1.0;   % Added by YJ. Scale all layers. Default: 1 (no scaling). Useful when delta_z is changed
+eng. init_layer_scaling_factor = 1;   % Added by YJ. Scale all layers. Default: 1 (no scaling). Useful when delta_z is changed
 
 % other extensions 
 eng. background = 0;                   % average background scattering level, for OMNI values around 0.3 for 100ms, for flOMNI <0.1 per 100ms exposure, see for more details: Odstrcil, M., et al., Optics letters 40.23 (2015): 5574-5577.
@@ -346,7 +349,7 @@ eng.apply_tilted_plane_correction = ''; % if any(p.sample_rotation_angles([1,2])
 eng.plot_results_every = Niter_plot_results;
 eng.save_results_every = Niter_save_results;
 eng.save_images ={'obj_ph_stack','obj_ph_sum','probe','probe_mag','probe_prop_mag'};
-eng.extraPrintInfo = strcat('BTO');
+eng.extraPrintInfo = strcat('AlGaAs');
 
 %
 resultDir = strcat(p.base_path,sprintf(p.scan.format, p.scan_number),'/roi',p.scan.roi_label,'/');
@@ -356,29 +359,51 @@ output_dir_suffix = strcat('_rot_ang', num2str(rot_ang));
 %add engine
 [p, ~] = core.append_engine(p, eng);    % Adds this engine to the reconstruction process
 
-%{
-%%refined reconstruction at full resolution
-eng. number_iterations = 50;          % number of iterations for selected method 
-eng. asize_presolve = [360, 360];              % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
-eng. grouping = 256;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
-                                       % * for hPIE, ePIE, MLs methods smaller blocks lead to faster convergence, 
-                                       % * for MLc the convergence is similar 
-                                       % * for DM is has no effect on convergence
-p.   save.save_reconstructions = true;
-eng. probe_change_start = 1;          % Start updating probe at this iteration number
-eng. probe_position_search = 1;       % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
+% Copy the script to the destination folder
+if ~isfolder(eng.fout)
+    mkdir(eng.fout);
+end
+copyfile(strcat(exe_path,'/ptycho_electron_AlGaAs.m'), strcat(eng.fout,'/ptycho_electron_AlGaAs.m'));
 
-[eng.fout, p.suffix] = generateResultDir(eng, resultDir);
+disp('Script copied successfully.');
+%% refined reconstruction at full resolution
+
+Nlayers = 40; % # of slices for multi-slice, 1 for single-slice
+delta_z = 10;
+reg_layers = 1.0;
+
+eng. number_iterations = 180;          % number of iterations for selected method 
+
+eng. delta_z = delta_z*ones(Nlayers,1);                     % if not empty, use multilayer ptycho extension , see ML_MS code for example of use, [] == common single layer ptychography , note that delta_z provides only relative propagation distance from the previous layer, ie delta_z can be either positive or negative. If preshift_ML_probe == false, the first layer is defined by position of initial probe plane. It is useful to use eng.momentum for convergence acceleration 
+eng. regularize_layers = reg_layers;           % multilayer extension: 0<R<<1 -> apply regularization on the reconstructed object layers, 0 == no regularization, 0.01 == weak regularization that will slowly symmetrize information content between layers 
+eng. preshift_ML_probe = true;        % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
+eng. layer4pos = [];                  % Added by ZC. speficy which layer is used for position correction ; if empty, then default, ceil(Nlayers/2)
+eng. init_layer_select = [];          % Added by YJ. Select layers in the initial object for pre-processing. If empty (default): use all layers.
+eng. init_layer_preprocess = 'interp';      % Added by YJ. Specify how to pre-process initial layers
+                                      % '' or 'all' (default): use all layers (do nothing)
+                                      % 'avg': average all layers 
+                                      % 'interp': interpolate layers using spline method. Need to specify desired depths in init_layer_interp
+eng. init_layer_interp = [1:0.5:20.5];          % Specify desired depths for interpolation. The depths of initial are [1:Nlayer_init]. If empty (default), no interpolation                 
+eng. init_layer_append_mode = '';     % Added by YJ. Specify how to initialize extra layers
+                                      % '' or 'vac' (default): add vacuum layers
+                                      % 'edge': append 1st or last layers
+                                      % 'avg': append averaged layer
+eng. init_layer_scaling_factor = 0.5;   % Added by YJ. Scale all layers. Default: 1 (no scaling). Useful when delta_z is changed
+
+
+resultDir = strcat(p.base_path,sprintf(p.scan.format, p.scan_number),'/roi',p.scan.roi_label,'/');
+output_dir_suffix = strcat('_rot_ang', num2str(rot_ang));
+[eng.fout, p.suffix] = generateResultDir(eng, resultDir, output_dir_suffix);
 
 %add engine
 [p, ~] = core.append_engine(p, eng);    % Adds this engine to the reconstruction process
-%}
+
 
 % Copy the script to the destination folder
 if ~isfolder(eng.fout)
     mkdir(eng.fout);
 end
-copyfile(strcat(exe_path,'/ptycho_electron_template.m'), strcat(eng.fout,'/ptycho_electron_template.m'));
+copyfile(strcat(exe_path,'/ptycho_electron_AlGaAs.m'), strcat(eng.fout,'/ptycho_electron_AlGaAs.m'));
 
 disp('Script copied successfully.');
 
