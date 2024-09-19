@@ -114,6 +114,9 @@ end
 % check rotation and flip 
 %calc_rotation(dp)
 
+%%Check virtual BF image
+bf_image=squeeze(sum(sum(dp,1),2)).^0.5;
+
 %
 dp = dp / exp_p.ADU; % convert to electron count, contained in the data file
 dp=reshape(dp,Np_p(1)/bin,Np_p(2)/bin,[]);
