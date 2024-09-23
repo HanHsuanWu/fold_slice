@@ -5,21 +5,21 @@ clear
 % https://data.paradim.org/doi/ssmm-2j11/
 % Note: it's a good practice to store data (and reconstructions) in a
 % different folder from fold_slice 
-scriptfolder = 'C:\Users\Han-Hsuan\Documents\GitHub\fold_slice\ptycho';
-addpath(strcat(pwd,'\utils_electron_from_huozhi'))
+scriptfolder = 'C:\Users\hanhsuan\Documents\GitHub\fold_slice\ptycho';
+addpath(strcat(scriptfolder,'\utils_electron_from_huozhi'));
 
 % Step 2: load data
-data_dir = 'Y:\Han-Hsuan\Ptychography_test\Trial3_bulk_32mrad\'; %change this
+data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20240918_AlGaAs_arm\Trial9\'; %change this
 data_dir = strrep(data_dir,'\','/');
-filename = 'Spectrum Image EELS Image.npy';
+filename = 'ALGAAS16P-9.mat';
 h5_suf = 'mask';
 scan_number = 1; %Ptychoshelves needs
-bin = 1;
-cutoff = 220;
-crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
+bin = 2;
+cutoff = 600;
+%crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
 % Positive is up and left.
-shift_dp = [8,8]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
-dp_size = 360; % Initial size of diffraction pattern
+shift_dp = [14,-4]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
+dp_size = 800; % Initial size of diffraction pattern
 
 
 % load(strcat(data_dir,'s01_R3_0_0.mat'))
@@ -27,19 +27,19 @@ dp_size = 360; % Initial size of diffraction pattern
 % input parameters if they are not included in the mat file
 exp_p = {};
 exp_p.ADU =     1.0;
-exp_p.voltage = 100; % kV
-exp_p.alpha =   32.0; % mrad
+exp_p.voltage = 300; % kV
+exp_p.alpha =   25.0; % mrad
 [~,lambda] =    electronwavelength(exp_p.voltage);
 %dk =            0.0367;
-exp_p.defocus = -150.0; % Angst.
-exp_p.scan_step_size = 0.4; % Angst.
+exp_p.defocus = 0.0; % Angst.
+exp_p.scan_step_size = 0.407; % Angst.
 exp_p.nv = dp_size; %final dp pattern size
 % exp_p.rot_ang = 20.0;
 
 % calculate pxiel size (1/A) in diffraction plane
 % [~,lambda]=electronwavelength(exp_p.voltage);
 
-exp_p.rbf=196.0/2/bin; % radius of center disk in pixels
+exp_p.rbf=400.0/2/bin; % radius of center disk in pixels
 dk=exp_p.alpha/1e3/exp_p.rbf/lambda;
 %exp_p.rbf = exp_p.alpha/1e3/dk/lambda; % radius of center disk in pixels
 exp_p.scan_number = scan_number;
@@ -60,12 +60,20 @@ if strcmp(filename(end-2:end), 'npy')
     %dp = permute(dp, [3 4 1 2]); %after this permute [ky kx y x]
     dp = permute(dp, [4 3 1 2]); %transpose the ky kx to correct rotation for nion 
 elseif strcmp(filename(end-2:end), 'mat')
-    load(f)
-    dp = m;
+    dp_struct = load(f);
+    fields = fieldnames(dp_struct);
+    dp = dp_struct.(fields{1});
+
+    for i = 2:length(fields)
+        dp = cat(4,dp,dp_struct.(fields{i}));
+    end
+
+    dp = permute(dp, [3 4 1 2]); %after this permute [ky kx y x]
+    clear dp_struct;
 elseif strcmp(filename(end-1:end), 'h5')
     dp = io_TEAM(f, 0, 0, 0, 0);
 end
-
+size(dp);
 % pacbed = mean(dp, [3 4]);
 %figure(); imagesc(pacbed); colorbar; axis image;
 
@@ -89,7 +97,7 @@ dp = dp(row_start:row_end, col_start:col_end, :, :);
 
 Np_p = [exp_p.nv,exp_p.nv]; % size of diffraction patterns used during reconstruction. can also pad to 256
 %%% crop data
-dp=dp(:,:,crop_idx(1):crop_idx(2),crop_idx(3):crop_idx(4));
+%dp=dp(:,:,crop_idx(1):crop_idx(2),crop_idx(3):crop_idx(4));
 
 %%% pad cbed
 [ndpy,ndpx,npy,npx]=size(dp);
