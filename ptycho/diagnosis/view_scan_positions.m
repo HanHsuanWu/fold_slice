@@ -81,4 +81,14 @@ axis tight
 ylabel('Shear  [deg]')
 xlabel('Iteration')
 title('Shear')
-grid on 
+grid on
+
+%% plot error without nans
+indices = size(outputs.fourier_error_out);
+% Create a mask for non-NaN values
+non_nan_mask = ~isnan(outputs.fourier_error_out);
+% Filter the array to exclude NaN values
+array_no_nan = outputs.fourier_error_out(non_nan_mask);
+% Get the indices for non-NaN values
+[rows, cols] = find(non_nan_mask);  % MATLAB way to get row and column indices
+scatter(rows,array_no_nan);
