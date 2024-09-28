@@ -9,9 +9,9 @@ scriptfolder = 'C:\Users\hanhsuan\Documents\GitHub\fold_slice\ptycho';
 addpath(strcat(scriptfolder,'\utils_electron_from_huozhi'));
 
 % Step 2: load data
-data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20240918_AlGaAs_arm\Trial9\'; %change this
+data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20240918_AlGaAs_arm\Trial1\'; %change this
 data_dir = strrep(data_dir,'\','/');
-filename = 'ALGAAS16P-9.mat';
+filename = 'ALGAAS16P-1.npy';
 h5_suf = 'mask';
 scan_number = 1; %Ptychoshelves needs
 bin = 2;
@@ -43,7 +43,7 @@ exp_p.rbf=400.0/2/bin; % radius of center disk in pixels
 dk=exp_p.alpha/1e3/exp_p.rbf/lambda;
 %exp_p.rbf = exp_p.alpha/1e3/dk/lambda; % radius of center disk in pixels
 exp_p.scan_number = scan_number;
-roi_label = strcat('0_Ndp', num2str(exp_p.nv), h5_suf);
+roi_label = strcat('0_Ndp', num2str(exp_p.nv/bin), h5_suf);
 exp_p.roi_label = roi_label;
 folder = data_dir;
 save_dir = strcat(folder,num2str(scan_number),'/'); % where to save
@@ -57,8 +57,8 @@ save(strcat(save_dir,'/exp_para', h5_suf, '.mat'),'exp_p');
 f = strcat(data_dir,filename);
 if strcmp(filename(end-2:end), 'npy')
     dp = readNPY(f);
-    %dp = permute(dp, [3 4 1 2]); %after this permute [ky kx y x]
-    dp = permute(dp, [4 3 1 2]); %transpose the ky kx to correct rotation for nion 
+    dp = permute(dp, [3 4 1 2]); %after this permute [ky kx y x]
+    %dp = permute(dp, [4 3 1 2]); %transpose the ky kx to correct rotation for nion 
 elseif strcmp(filename(end-2:end), 'mat')
     dp_struct = load(f);
     fields = fieldnames(dp_struct);
@@ -73,7 +73,7 @@ elseif strcmp(filename(end-2:end), 'mat')
 elseif strcmp(filename(end-1:end), 'h5')
     dp = io_TEAM(f, 0, 0, 0, 0);
 end
-size(dp);
+
 % pacbed = mean(dp, [3 4]);
 %figure(); imagesc(pacbed); colorbar; axis image;
 
@@ -119,13 +119,15 @@ end
 
 %pacbed = mean(dp, [3 4]);
 %figure(); imagesc(pacbed.^0.5); colorbar; axis image;
-% check rotation and flip 
-%calc_rotation(dp)
+%% check rotation and flip 
+calc_rotation(dp)
 
-%%Check virtual BF image
+%% Check virtual BF image
 bf_image=squeeze(sum(sum(dp,1),2)).^0.5;
-
-%
+bf = imagesc(bf_image); colorbar; axis image;
+saveas(gcf,strcat(data_dir,'/bf_image.tiff'));
+close(bf);
+%%
 dp = dp / exp_p.ADU; % convert to electron count, contained in the data file
 dp=reshape(dp,Np_p(1)/bin,Np_p(2)/bin,[]);
 pacbed = mean(dp, 3);
