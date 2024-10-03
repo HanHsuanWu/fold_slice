@@ -9,17 +9,17 @@ scriptfolder = 'C:\Users\hanhsuan\Documents\GitHub\fold_slice\ptycho';
 addpath(strcat(scriptfolder,'\utils_electron_from_huozhi'));
 
 % Step 2: load data
-data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20240917_AlGaAs_nion\data2\'; %change this
+data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20240918_AlGaAs_arm\Trial7\'; %change this
 data_dir = strrep(data_dir,'\','/');
-filename = 'Spectrum Image EELS Image.npy';
+filename = 'ALGAAS16P-7.npy';
 h5_suf = 'mask';
 scan_number = 1; %Ptychoshelves needs
-bin = 1;
-cutoff = 300;
+bin = 2;
+cutoff = 600;
 %crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
 % Positive is up and left.
-shift_dp = [-4,0]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
-dp_size = 360; % Initial size of diffraction pattern
+shift_dp = [0,12]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
+dp_size = 800; % Initial size of diffraction pattern
 
 
 % load(strcat(data_dir,'s01_R3_0_0.mat'))
@@ -27,19 +27,19 @@ dp_size = 360; % Initial size of diffraction pattern
 % input parameters if they are not included in the mat file
 exp_p = {};
 exp_p.ADU =     1.0;
-exp_p.voltage = 60; % kV
+exp_p.voltage = 300; % kV
 exp_p.alpha =   25.0; % mrad
 [~,lambda] =    electronwavelength(exp_p.voltage);
 %dk =            0.0367;
-exp_p.defocus = -100.0; % Angst.
-exp_p.scan_step_size = 0.191; % Angst.
+exp_p.defocus = 0.0; % Angst.
+exp_p.scan_step_size = 0.406; % Angst.
 exp_p.nv = dp_size; %final dp pattern size
 % exp_p.rot_ang = 20.0;
 
 % calculate pxiel size (1/A) in diffraction plane
 % [~,lambda]=electronwavelength(exp_p.voltage);
 
-exp_p.rbf=185.8/2/bin; % radius of center disk in pixels
+exp_p.rbf=398.0/2/bin; % radius of center disk in pixels
 dk=exp_p.alpha/1e3/exp_p.rbf/lambda;
 %exp_p.rbf = exp_p.alpha/1e3/dk/lambda; % radius of center disk in pixels
 exp_p.scan_number = scan_number;
@@ -52,14 +52,13 @@ mkdir(save_dir)
 save(strcat(save_dir,'/exp_para', h5_suf, '.mat'),'exp_p');
 % copyfile(strcat(scriptfolder, mfilename, '.m'), strcat(save_dir, mfilename, '.m'));
 
-% Step 3: load raw data
+%% Step 3: load raw data
 % nv, nv, ny, nx
 f = strcat(data_dir,filename);
-if strcmp(filename(end-2:end), 'npy')
+if strcmp(filename(end-2:end), 'npy') %grandarm [x y kx ky]
     dp = readNPY(f);
-    %dp = permute(dp, [3 4 1 2]); %after this permute [ky kx y x]
-    dp = flip(dp,4); %flip kx for flip_l_r
-    dp = permute(dp, [4 3 1 2]); %transpose the ky kx to correct rotation for nion 
+    dp = permute(dp, [4 3 2 1]); % [ky kx y x]
+    %dp = permute(dp, [4 3 1 2]); %transpose the ky kx to correct rotation for nion 
 elseif strcmp(filename(end-2:end), 'mat')
     dp_struct = load(f);
     fields = fieldnames(dp_struct);
@@ -74,9 +73,61 @@ elseif strcmp(filename(end-2:end), 'mat')
 elseif strcmp(filename(end-1:end), 'h5')
     dp = io_TEAM(f, 0, 0, 0, 0);
 end
+%% Check CBED center of 1 dp
+dp1=dp(:,:,1,1);
+%crop to center dp
+if shift_dp(1) >= 0
+    row_start = shift_dp(1) + 1;
+    row_end = size(dp1, 1);
+else
+    row_start = 1;
+    row_end = size(dp1, 1) + shift_dp(1);
+end
 
-% pacbed = mean(dp, [3 4]);
-%figure(); imagesc(pacbed); colorbar; axis image;
+if shift_dp(2) >= 0
+    col_start = shift_dp(2) + 1;
+    col_end = size(dp1, 2);
+else
+    col_start = 1;
+    col_end = size(dp1, 2) + shift_dp(2);
+end
+
+Np_p = [exp_p.nv,exp_p.nv]; % size of diffraction patterns used during reconstruction. can also pad to 256
+%%% crop data
+
+dp1 = dp1(row_start:row_end, col_start:col_end, :, :);
+%%% pad cbed
+[ndpy,ndpx,~,~]=size(dp1);
+if ndpy < Np_p(1) % pad zeros
+    dp1=padarray(dp1,[(Np_p(1)-ndpy)/2,round((Np_p(2)-ndpx)/2),0,0],0,'both');
+else
+    dp1=crop_pad(dp1,Np_p);
+end
+
+%cutoff cbed with circular mask
+%dp1 = applyCircularCutoff(dp1, cutoff);
+pacbed2 = mean(dp1, [3 4]);
+figure(); imagesc(pacbed2); colorbar; axis image;
+
+% Get the size of the image
+[rows, cols] = size(pacbed2);
+
+% Define the center and radius of the circle
+centerX = cols / 2;
+centerY = rows / 2;
+radius = exp_p.rbf*bin;  % Adjust the radius as needed
+
+% Draw the circle and it's center
+rectangle('Position', [centerX - radius, centerY - radius, 2*radius, 2*radius], ...
+          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 2);
+
+circle_radius = 2;
+rectangle('Position', [centerX - circle_radius/2, centerY - circle_radius/2, circle_radius, circle_radius], ...
+          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 2);
+
+hold off;
+
+%% Center all dp
 
 %crop to center dp
 if shift_dp(1) >= 0
@@ -109,7 +160,7 @@ else
 end
 
 %cutoff cbed with circular mask
-dp = applyCircularCutoff(dp, cutoff);
+%dp = applyCircularCutoff(dp, cutoff);
 
 % bin / pad
 %%% bin 4d
@@ -117,17 +168,28 @@ if bin > 1
     dp = bin4d(dp, bin, bin);
     warning('CBEDs are binned.')
 end
-
+%% Check Average CBED
 %pacbed = mean(dp, [3 4]);
 %figure(); imagesc(pacbed.^0.5); colorbar; axis image;
+%% Check virtual BF image
+cutoffbf = exp_p.rbf ;
+bfdata = applyCircularCutoff(dp, cutoffbf);
+pacbed = mean(bfdata, [3 4]);
+figure(); imagesc(pacbed.^0.5); colorbar; axis image;
+title('crop BF cbed', 'FontSize', 14);
+saveas(gcf,strcat(data_dir,'/crop_BF_cbed.tiff'));
+close();
+%%
+bf_image=squeeze(sum(sum(bfdata,1),2)).^0.5;
+bf = imagesc(transpose(bf_image)); colorbar ; axis image;
+colormap(flipud(parula));
+title('reverse bf image', 'FontSize', 14);
+saveas(gcf,strcat(data_dir,'/reverse_bf_image.tiff'));
+close();
 %% check rotation and flip 
 calc_rotation(dp)
-
-%% Check virtual BF image
-bf_image=squeeze(sum(sum(dp,1),2)).^0.5;
-bf = imagesc(bf_image); colorbar; axis image;
-saveas(gcf,strcat(data_dir,'/bf_image.tiff'));
-close;
+saveas(gcf,strcat(data_dir,'/curlCOM.tiff'));
+close()
 %%
 dp = dp / exp_p.ADU; % convert to electron count, contained in the data file
 dp=reshape(dp,Np_p(1)/bin,Np_p(2)/bin,[]);
@@ -155,13 +217,11 @@ rectangle('Position', [centerX - circle_radius/2, centerY - circle_radius/2, cir
 
 hold off;
 
-
-
-% save image
 saveas(gcf,strcat(data_dir,'/cbed.tiff'));
+close();
 %% save file
 copyfile([mfilename('fullpath'), '.m'], strcat(data_dir,num2str(scan_number),'/prepare_data.m'));
-%% change color bar scale
+%% save dp hdf5
 %caxis([0 7.5]);
 
 
