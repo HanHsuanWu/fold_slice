@@ -626,13 +626,14 @@ for iter =  (1-par.initial_probe_rescaling):par.number_iterations
         p.multi_slice_param.regularize_layers = par.regularize_layers;
         p.multi_slice_param.preshift_ML_probe = par.preshift_ML_probe;
         p.multi_slice_param.layer4pos = par.layer4pos;
-        
+
         % store parameters for object initialization
         p.obj_init_param.init_layer_select = par.init_layer_select;
         p.obj_init_param.init_layer_preprocess = par.init_layer_preprocess;
         p.obj_init_param.init_layer_interp = par.init_layer_interp;
         p.obj_init_param.init_layer_append_mode = par.init_layer_append_mode;
         p.obj_init_param.init_layer_scaling_factor = par.init_layer_scaling_factor;
+        p.obj_init_param.append_pattern = par.append_pattern; %added by Han
         if isfield(par.p,'initial_iterate_object_file') && ~isempty(par.p.initial_iterate_object_file{1}) % if initial object is from a given file
         	p.init_object_file = par.p.initial_iterate_object_file;
             if isfield(par.p,'multiple_layers_obj')
