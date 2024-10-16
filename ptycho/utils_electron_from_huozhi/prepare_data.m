@@ -9,17 +9,17 @@ scriptfolder = 'C:\Users\hanhsuan\Documents\GitHub\fold_slice\ptycho';
 addpath(strcat(scriptfolder,'\utils_electron_from_huozhi'));
 
 % Step 2: load data
-data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20240918_AlGaAs_arm\Trial7\'; %change this
+data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20240909_AlGaAs_EMPAD\test26\'; %change this
 data_dir = strrep(data_dir,'\','/');
-filename = 'ALGAAS16P-7.npy';
+filename = 'test26.npy';
 h5_suf = 'mask';
 scan_number = 1; %Ptychoshelves needs
-bin = 2;
+bin = 1;
 cutoff = 600;
 %crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
 % Positive is up and left.
-shift_dp = [0,12]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
-dp_size = 800; % Initial size of diffraction pattern
+shift_dp = [0,0]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
+dp_size = 128; % Initial size of diffraction pattern
 
 
 % load(strcat(data_dir,'s01_R3_0_0.mat'))
@@ -39,7 +39,7 @@ exp_p.nv = dp_size; %final dp pattern size
 % calculate pxiel size (1/A) in diffraction plane
 % [~,lambda]=electronwavelength(exp_p.voltage);
 
-exp_p.rbf=398.0/2/bin; % radius of center disk in pixels
+exp_p.rbf=96.0/2/bin; % radius of center disk in pixels
 dk=exp_p.alpha/1e3/exp_p.rbf/lambda;
 %exp_p.rbf = exp_p.alpha/1e3/dk/lambda; % radius of center disk in pixels
 exp_p.scan_number = scan_number;
@@ -57,7 +57,8 @@ save(strcat(save_dir,'/exp_para', h5_suf, '.mat'),'exp_p');
 f = strcat(data_dir,filename);
 if strcmp(filename(end-2:end), 'npy') %grandarm [x y kx ky]
     dp = readNPY(f);
-    dp = permute(dp, [4 3 2 1]); % [ky kx y x]
+    dp = permute(dp, [1 2 4 3]);  % [kx ky x y] EMPAD+transpose
+    %dp = permute(dp, [4 3 2 1]); % [ky kx y x] grandArm
     %dp = permute(dp, [4 3 1 2]); %transpose the ky kx to correct rotation for nion 
 elseif strcmp(filename(end-2:end), 'mat')
     dp_struct = load(f);
@@ -169,8 +170,8 @@ if bin > 1
     warning('CBEDs are binned.')
 end
 %% Check Average CBED
-%pacbed = mean(dp, [3 4]);
-%figure(); imagesc(pacbed.^0.5); colorbar; axis image;
+pacbed = mean(dp, [3 4]);
+figure(); imagesc(pacbed.^0.5); colorbar; axis image;
 %% Check virtual BF image
 cutoffbf = exp_p.rbf ;
 bfdata = applyCircularCutoff(dp, cutoffbf);
