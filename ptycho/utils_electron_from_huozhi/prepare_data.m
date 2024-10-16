@@ -11,11 +11,11 @@ addpath(strcat(scriptfolder,'\utils_electron_from_huozhi'));
 % Step 2: load data
 data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20240909_AlGaAs_EMPAD\test26\'; %change this
 data_dir = strrep(data_dir,'\','/');
-filename = 'test26.npy';
+filename = 'ALASGA_test26_200kv_18p9conv_10M_defocus_p15_CL910m(50pix)_rot0deg_probe30pA_10M_256pixel.npy';
 h5_suf = 'mask';
 scan_number = 1; %Ptychoshelves needs
 bin = 1;
-cutoff = 600;
+cutoff = 80;
 %crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
 % Positive is up and left.
 shift_dp = [0,0]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
@@ -27,19 +27,19 @@ dp_size = 128; % Initial size of diffraction pattern
 % input parameters if they are not included in the mat file
 exp_p = {};
 exp_p.ADU =     1.0;
-exp_p.voltage = 300; % kV
-exp_p.alpha =   25.0; % mrad
+exp_p.voltage = 200; % kV
+exp_p.alpha =   18.9; % mrad
 [~,lambda] =    electronwavelength(exp_p.voltage);
 %dk =            0.0367;
 exp_p.defocus = 0.0; % Angst.
-exp_p.scan_step_size = 0.406; % Angst.
+exp_p.scan_step_size = 0.34648; % Angst.
 exp_p.nv = dp_size; %final dp pattern size
 % exp_p.rot_ang = 20.0;
 
 % calculate pxiel size (1/A) in diffraction plane
 % [~,lambda]=electronwavelength(exp_p.voltage);
 
-exp_p.rbf=96.0/2/bin; % radius of center disk in pixels
+exp_p.rbf=104.0/2/bin; % radius of center disk in pixels
 dk=exp_p.alpha/1e3/exp_p.rbf/lambda;
 %exp_p.rbf = exp_p.alpha/1e3/dk/lambda; % radius of center disk in pixels
 exp_p.scan_number = scan_number;
@@ -55,11 +55,10 @@ save(strcat(save_dir,'/exp_para', h5_suf, '.mat'),'exp_p');
 %% Step 3: load raw data
 % nv, nv, ny, nx
 f = strcat(data_dir,filename);
-if strcmp(filename(end-2:end), 'npy') %grandarm [x y kx ky]
-    dp = readNPY(f);
-    dp = permute(dp, [1 2 4 3]);  % [kx ky x y] EMPAD+transpose
-    %dp = permute(dp, [4 3 2 1]); % [ky kx y x] grandArm
-    %dp = permute(dp, [4 3 1 2]); %transpose the ky kx to correct rotation for nion 
+if strcmp(filename(end-2:end), 'npy') 
+    dp = readNPY(f); %GrandArm do not need any permute
+    dp = permute(dp, [4 3 1 2]); %EMPAD
+    disp(size(dp));
 elseif strcmp(filename(end-2:end), 'mat')
     dp_struct = load(f);
     fields = fieldnames(dp_struct);
@@ -74,6 +73,7 @@ elseif strcmp(filename(end-2:end), 'mat')
 elseif strcmp(filename(end-1:end), 'h5')
     dp = io_TEAM(f, 0, 0, 0, 0);
 end
+% dp needs to be in [ky kx y x]
 %% Check CBED center of 1 dp
 dp1=dp(:,:,1,1);
 %crop to center dp
@@ -106,7 +106,7 @@ else
 end
 
 %cutoff cbed with circular mask
-%dp1 = applyCircularCutoff(dp1, cutoff);
+dp1 = applyCircularCutoff(dp1, cutoff);
 pacbed2 = mean(dp1, [3 4]);
 figure(); imagesc(pacbed2); colorbar; axis image;
 
@@ -161,7 +161,7 @@ else
 end
 
 %cutoff cbed with circular mask
-%dp = applyCircularCutoff(dp, cutoff);
+dp = applyCircularCutoff(dp, cutoff);
 
 % bin / pad
 %%% bin 4d
