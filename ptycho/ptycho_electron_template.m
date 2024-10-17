@@ -93,7 +93,7 @@ p.   detector.check_2_detpos = [];                          % = []; (ignores)   
 p.   detector.data_prefix = '';                             % Default using current eaccount e.g. e14169_1_
 p.   detector.binning = false;                              % = true to perform 2x2 binning of detector pixels, for binning = N do 2^Nx2^N binning
 p.   detector.upsampling = false;                           % upsample the measured data by 2^data_upsampling, (transposed operator to the binning), it can be used for superresolution in nearfield ptychography or to account for undersampling in a far-field dataset
-p.   crop_init_probe = false;
+p.   crop_pad_init_probe = false;
 p.   detector.burst_frames = 1;                             % number of frames collected per scan position
 
 p.   prepare.data_preparator = 'matlab_aps';                % data preparator; 'python' or 'matlab' or 'matlab_aps'
@@ -101,7 +101,7 @@ p.   prepare.auto_prepare_data = true;                      % if true: prepare d
 p.   prepare.force_preparation_data = true;                 % Prepare dataset even if it exists, it will overwrite the file % Default: @prepare_data_2d
 p.   prepare.store_prepared_data = false;                   % store the loaded data to h5 even for non-external engines (i.e. other than c_solver)
 p.   prepare.prepare_data_function = '';                    % (used only if data should be prepared) custom data preparation function handle;
-p.   prepare.auto_center_data = true;                      % if matlab data preparator is used, try to automatically center the diffraction pattern to keep center of mass in center of diffraction
+p.   prepare.auto_center_data = false;                      % if matlab data preparator is used, try to automatically center the diffraction pattern to keep center of mass in center of diffraction
 
 % Scan positions
 p.   src_positions = 'matlab_pos'; % 'spec', 'orchestra', 'load_from_file', 'matlab_pos' (scan params are defined below) or add new position loaders to +scan/+positions/
