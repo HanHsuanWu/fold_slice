@@ -151,7 +151,7 @@ p.   save_path{1} = '';                                     % Default: base_path
 p.   io.default_mask_file = '';                             % load detector mask defined in this file instead of the mask in the detector packages, (used only if data should be prepared) 
 p.   io.default_mask_type = 'binary';                       % (used only if data should be prepared) ['binary', 'indices']. Default: 'binary' 
 p.   io.file_compression = 0;                               % reconstruction file compression for Hd5 files; 0 for no compression
-p.   io.data_compression = 3;                               % prepared data file compression for HDF5 files; 0 for no compression
+p.   io.data_compression = 4;                               % prepared data file compression for HDF5 files; 0 for no compression
 p.   io.load_prep_pos = false;                              % load positions from prepared data file and ignore positions provided by metadata
 
 p.   io.data_descriptor = 'multislice';                     %added by YJ. A short string that describe data when sending notifications 
