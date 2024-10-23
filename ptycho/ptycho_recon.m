@@ -274,6 +274,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     % scan parameters for option src_positions = 'matlab_pos';
     p.   scan.type = param_input.scan_type;                               % {'round', 'raster', 'round_roi', 'custom'}
     p.   scan.roi_label = param_input.roi_label;                            % For APS data
+    
     p.   scan.format = param_input.scan_format;                      % For APS data format for scan directory generation
 
     p.   scan.radius_in = 0;                                    % round scan: interior radius of the round scan

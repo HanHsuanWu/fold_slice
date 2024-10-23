@@ -50,13 +50,14 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     par_recon.probe_alpha_max = par.alpha_max;
     par_recon.probe_df = par.defocus;
     par_recon.model_probe_prop_dist = par.probe_prop_dist;
+    par_recon.scan_format = par.scan_format; %added by Han to fix missing scan_number
 
     par_recon.output_dir_suffix = generate_output_dir_suffix(par.output_dir_suffix_base, varargin, strcmp(par.beam_source, 'electron'));
     
     if strcmp(par_recon.eng_name, 'GPU_MS') && par.thickness > 0
         par_recon.delta_z = par.thickness / par_recon.Nlayers;
     end
-
+    
     [~, ~, data_error] = ptycho_recon(par_recon);
 
 end

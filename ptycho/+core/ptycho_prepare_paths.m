@@ -77,7 +77,6 @@ if init
     
     p.base_path = abspath(p.base_path);
     
-    
     % specfile
     if isfield(p, 'specfile')
         if isempty(p.specfile) && isfield(p, 'src_metadata') && strcmp(p.src_metadata, 'spec')
@@ -146,7 +145,7 @@ else
     for ii = 1:length(p.scan_number)
         p.   scan_str{ii} = sprintf(p.scan_string_format, p.scan_number(ii));        % Scan string
     end
-
+    
     if isempty(p.save_path) || iscell(p.save_path)&&isempty(p.save_path{1})
         verbose(3, 'Using default save_path');
         for ii = 1:length(p.scan_number)

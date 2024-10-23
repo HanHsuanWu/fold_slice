@@ -4,32 +4,33 @@ exe_path = directory_content(1).folder; % returns the path that is currently ope
 scriptfolder = '/mnt/pgo4/pgo4_v1/Han-Hsuan/fold_slice/ptycho';
 scriptfolder = strrep(scriptfolder,'\','/');
 cd(scriptfolder);
+%%
 addpath(strcat(pwd,'/utils/'))
 addpath(core.find_base_package)
 
-%% Step 0: Run the prepare_data script to generate data for ptycho reconstruction
+% Step 0: Run the prepare_data script to generate data for ptycho reconstruction
 % Step 1: Prepare data and reconstruction parameters
 par = {};
 par.verbose_level = 3;
-par.scan_number = 1;
+par.scan_number = 2;
 par.beam_source = 'electron';
 
-base_path = '/mnt/pgo4/pgo4_v1\Han-Hsuan\Ptychography_test\20240917_AlGaAs_nion\data2\';
+base_path = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20241009_AlGaAs-90s_arm\trial6\';
 par.base_path = strrep(base_path,'\','/');
-clear base_path;
+par.roi_label = '0_Ndp400mask';
 par.scan_format = '%01d';
-par.scan_string_format = '%01d';
-par.roi_label = '0_Ndp360mask'; %don't forget to change this to match file name
-par.Ndp = 360;
+par.Ndp = 400;  % size of cbed
+par.alpha0 = 25.0; % semi-convergen1e angle (mrad)
 bin = 1;
 
+%{
 num_ang = 5;
 ang_range = [115.2, 235.2];
 scan_custom_fliplr =    ones(1,num_ang);
 scan_custom_flipud =    ones(1,num_ang);
 scan_custom_transpose = ones(1,num_ang);
-rot_ang =               ang_range(1):(ang_range(2)-ang_range(1))/(num_ang-1):ang_range(2);
-%%
+rot_ang = ang_range(1):(ang_range(2)-ang_range(1))/(num_ang-1):ang_range(2);
+%}
 %{
 %[1,1,1] means no flip
 scan_custom_fliplr =    [1,1,1,1,1,1,1,1,1,1,1];
@@ -48,17 +49,17 @@ rot_ang =               [0,0,0,0,0,0,0,0];  1.8561  1.8848
 Niter=100;
 
 par.defocus = -100; %overfocus is negative
-par.energy = 60;
-par.rbf = 185.8/2/bin;
+par.energy = 300;
+par.rbf = 400./2/bin;
 
 par.cen_dp_y = floor(par.Ndp/2)+1;
 par.cen_dp_x = floor(par.Ndp/2)+1;
 
-par.scan_nx = 200;
-par.scan_ny = 200;
+par.scan_nx = 120;
+par.scan_ny = 122;
 
-par.scan_step_size_x = 0.191;
-par.scan_step_size_y = 0.191;
+par.scan_step_size_x = 0.42;
+par.scan_step_size_y = 0.42;
 
 par.detector_name = 'empad';
 par.data_preparator = 'matlab_aps';
@@ -74,27 +75,26 @@ par.Niter_save_results_every = Niter;
 par.save.save_reconstructions = true;
 
 par.eng_name = 'GPU_MS';
-par.method = 'MLc';
-par.momentum = 0.5;
+par.method = 'MLs';
+par.momentum = 0;
 
-par.Nprobe = 2;
-par.grouping = 50;
-par.apply_multimodal_update = true;
+par.Nprobe = 5;
+par.grouping = 32;
+par.apply_multimodal_update = false;
 
-par.Nlayers = 1;
+par.Nlayers = 2;
 par.regularize_layers = 1;
 par.variable_probe_modes = 1;
-par.Ndp_presolve = 360;
+par.Ndp_presolve = 400;
 
 % Step 1.5 (optional): Run a single reconstruction to check parameters
-par.GPU_list = [1,2,3,4];
+par.GPU_list = [1];
 
-par.alpha_max = 38.0;
+par.alpha_max = 25.0;
 
-par.thickness = 160; %in angstroms
-thickness = 160;
+par.thickness = 300; %in angstroms
 
-data_error_list = zeros(1, length(scan_custom_fliplr));
+%data_error_list = zeros(1, length(scan_custom_fliplr));
 
 %% make it iterative
 for ieng=1:length(scan_custom_fliplr)
@@ -118,7 +118,7 @@ ylabel('Fourier Error');
 title('');
 saveas(gcf,strcat(par.base_path,num2str(par.scan_number),'/rot_angError.tiff'));
 %}
-%{
+
 %% Step 2: Use Bayesian optimization with Gaussian processes to find experimental parameters that minimize data error
 % Note: Parallel BO is generally recommended for multislice reconstructions
 close all
@@ -129,7 +129,8 @@ par.scan_custom_fliplr = 1;
 par.scan_custom_flipud = 1;
 par.scan_custom_transpose = 1;
 
-rot_ang = optimizableVariable('rot_ang', [0, 360]); %angstroms
+rot_ang = optimizableVariable('rot_ang', [-180, 180]); %angstroms
+defocus = optimizableVariable('defocus', [-500, 0]); %angstroms
 
 N_workers = length(par.GPU_list);
 if N_workers>1
@@ -139,14 +140,16 @@ if N_workers>1
     p = parpool(c);
 end
 
-fun = @(x)ptycho_recon_exp_data(par, 'rot_ang', x.rot_ang);
-results = bayesopt(fun, [rot_ang],...
+output_dir_suffix_base = strcat('_flip', num2str(par.scan_custom_fliplr), num2str(par.scan_custom_flipud), num2str(par.scan_custom_transpose));
+par.output_dir_suffix_base = strrep(output_dir_suffix_base,'\','/');
+
+fun = @(x)ptycho_recon_exp_data(par, 'rot_ang', x.rot_ang, 'defocus', x.defocus);
+results = bayesopt(fun, [rot_ang, defocus],...
     'Verbose', 4,...
     'AcquisitionFunctionName', 'expected-improvement-plus',...
     'IsObjectiveDeterministic', false,...
-    'MaxObjectiveEvaluations', 30,...
+    'MaxObjectiveEvaluations', 1,...
     'NumSeedPoints', N_workers,...
     'PlotFcn', {@plotObjectiveModel, @plotMinObjective}, 'UseParallel', N_workers>1);
 
 delete(gcp('nocreate'))
-%}
