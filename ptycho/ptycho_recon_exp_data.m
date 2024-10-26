@@ -50,6 +50,7 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     par_recon.probe_alpha_max = par.alpha_max;
     par_recon.probe_df = par.defocus;
     par_recon.model_probe_prop_dist = par.probe_prop_dist;
+    par_recon.beta_probe = par.beta_probe;
 
     par_recon.output_dir_suffix = generate_output_dir_suffix(par.output_dir_suffix_base, varargin, strcmp(par.beam_source, 'electron'));
     

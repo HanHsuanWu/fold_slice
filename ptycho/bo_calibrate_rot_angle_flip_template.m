@@ -15,8 +15,8 @@ par.verbose_level = 3;
 par.scan_number = 2;
 par.beam_source = 'electron';
 
-%base_path = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20241010_AlGaAs-30s_arm\trial4\';
-base_path = '/mnt/pgo4/pgo4_v1/Han-Hsuan\Ptychography_test\20241010_AlGaAs-30s_arm\trial4\';
+base_path = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20241010_AlGaAs-30s_arm\trial4\';
+%base_path = '/mnt/pgo4/pgo4_v1/Han-Hsuan\Ptychography_test\20241009_AlGaAs-90s_arm\trial6\';
 par.base_path = strrep(base_path,'\','/');
 par.roi_label = '0_Ndp400mask';
 par.scan_format = '%01d';
@@ -24,43 +24,20 @@ par.Ndp = 400;  % size of cbed
 par.alpha0 = 25.0; % semi-convergen1e angle (mrad)
 bin = 2;
 
-%{
-num_ang = 5;
-ang_range = [115.2, 235.2];
-scan_custom_fliplr =    ones(1,num_ang);
-scan_custom_flipud =    ones(1,num_ang);
-scan_custom_transpose = ones(1,num_ang);
-rot_ang = ang_range(1):(ang_range(2)-ang_range(1))/(num_ang-1):ang_range(2);
-%}
-%{
-%[1,1,1] means no flip
-scan_custom_fliplr =    [1,1,1,1,1,1,1,1,1,1,1];
-scan_custom_flipud =    [1,1,1,1,1,1,1,1,1,1,1];
-scan_custom_transpose = [1,1,1,1,1,1,1,1,1,1,1];
-rot_ang =               [57.9,67.9,77.9,82.9,87.9,92.9,97.9,107.9,-92.1,-102.1,-112.1];
-%}
-
-%{
-scan_custom_fliplr =    [0,1,0,0,1,1,1,0];
-scan_custom_flipud =    [0,0,1,0,1,1,0,1];
-scan_custom_transpose = [0,0,0,1,1,0,1,1];
-rot_ang =               [0,0,0,0,0,0,0,0];  1.8561  1.8848
-%}
-
 Niter=100;
 
-par.defocus = -120; %overfocus is negative
+par.defocus = -200; %overfocus is negative
 par.energy = 300;
 par.rbf = 400./2/bin;
 
 par.cen_dp_y = floor(par.Ndp/2)+1;
 par.cen_dp_x = floor(par.Ndp/2)+1;
 
-par.scan_nx = 118;
-par.scan_ny = 118;
+par.scan_nx = 120;
+par.scan_ny = 122;
 
-par.scan_step_size_x = 0.41;
-par.scan_step_size_y = 0.41;
+par.scan_step_size_x = 0.417;
+par.scan_step_size_y = 0.417;
 
 par.detector_name = 'empad';
 par.data_preparator = 'matlab_aps';
@@ -88,6 +65,8 @@ par.regularize_layers = 1;
 par.variable_probe_modes = 1;
 par.Ndp_presolve = 400;
 par.alpha_max = 25.0;
+par.thickness = 80;
+par.beta_probe = 0.3;
 
 %{
 % Step 1.5 (optional): Run a single reconstruction to check parameters
@@ -127,15 +106,15 @@ saveas(gcf,strcat(par.base_path,num2str(par.scan_number),'/rot_angError.tiff'));
 % Note: Parallel BO is generally recommended for multislice reconstructions
 close all
 
-par.rot_ang = 67.9;
-par.GPU_list = [1,2,3];
+par.rot_ang = 52.2;
+par.GPU_list = [1];
 
 par.scan_custom_fliplr = 1;
 par.scan_custom_flipud = 1;
 par.scan_custom_transpose = 1;
 
-rot_ang = optimizableVariable('rot_ang', [-180, 180]);
-defocus = optimizableVariable('defocus', [-150, -120]); %angstroms
+rot_ang = optimizableVariable('rot_ang', [50.5, 54.2]);
+defocus = optimizableVariable('defocus', [-220, -180]); %angstroms
 
 output_dir_suffix_base = strcat('_flip', num2str(par.scan_custom_fliplr), num2str(par.scan_custom_flipud), num2str(par.scan_custom_transpose));
 par.output_dir_suffix_base = strrep(output_dir_suffix_base,'\','/');
@@ -153,7 +132,7 @@ results = bayesopt(fun, [rot_ang, defocus],...
     'Verbose', 4,...
     'AcquisitionFunctionName', 'expected-improvement-plus',...
     'IsObjectiveDeterministic', false,...
-    'MaxObjectiveEvaluations', 30,...
+    'MaxObjectiveEvaluations', 50,...
     'NumSeedPoints', N_workers,...
     'PlotFcn', {@plotObjectiveModel, @plotMinObjective}, ...
     'UseParallel', N_workers>1);
