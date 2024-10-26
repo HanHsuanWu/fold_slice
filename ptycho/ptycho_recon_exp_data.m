@@ -25,30 +25,15 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
             par.(name{1}) = r.(name{1});
         end
     end
-
+    
     if length(par.GPU_list)>1 %assume parallel processing
-        % Find the best GPU
-        % Get the number of GPUs
-        numGPUs = gpuDeviceCount;
-        
-        % Initialize variables to track the best GPU
-        maxMemory = 0;
-        bestGPU = 1;
-        
-        % Loop through each GPU to find the one with the most available memory
-        for i = 1:numGPUs
-            gpuInfo = gpuDevice(i);
-            % Update the best GPU based on available memory
-            if gpuInfo.AvailableMemory > maxMemory
-                maxMemory = gpuInfo.AvailableMemory;
-                bestGPU = i;
-            end
-        end
-            gpu_id = bestGPU;
+        t = getCurrentTask;
+        t = t.ID;
+        gpu_id = par.GPU_list(t);
     else
         gpu_id = par.GPU_list;
-    end
-    
+        end
+
     par_recon = par;
     par_recon.gpu_id = gpu_id; 
     
