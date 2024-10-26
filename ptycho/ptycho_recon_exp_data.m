@@ -27,9 +27,24 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     end
 
     if length(par.GPU_list)>1 %assume parallel processing
-        t = getCurrentTask;
-        t = t.ID;
-        gpu_id = par.GPU_list(t);
+        % Find the best GPU
+        % Get the number of GPUs
+        numGPUs = gpuDeviceCount;
+        
+        % Initialize variables to track the best GPU
+        maxMemory = 0;
+        bestGPU = 1;
+        
+        % Loop through each GPU to find the one with the most available memory
+        for i = 1:numGPUs
+            gpuInfo = gpuDevice(i);
+            % Update the best GPU based on available memory
+            if gpuInfo.AvailableMemory > maxMemory
+                maxMemory = gpuInfo.AvailableMemory;
+                bestGPU = i;
+            end
+        end
+            gpu_id = bestGPU;
     else
         gpu_id = par.GPU_list;
     end
@@ -50,14 +65,13 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     par_recon.probe_alpha_max = par.alpha_max;
     par_recon.probe_df = par.defocus;
     par_recon.model_probe_prop_dist = par.probe_prop_dist;
-    par_recon.scan_format = par.scan_format; %added by Han to fix missing scan_number
 
     par_recon.output_dir_suffix = generate_output_dir_suffix(par.output_dir_suffix_base, varargin, strcmp(par.beam_source, 'electron'));
     
     if strcmp(par_recon.eng_name, 'GPU_MS') && par.thickness > 0
         par_recon.delta_z = par.thickness / par_recon.Nlayers;
     end
-    
+
     [~, ~, data_error] = ptycho_recon(par_recon);
 
 end

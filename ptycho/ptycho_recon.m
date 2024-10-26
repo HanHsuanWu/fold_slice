@@ -305,7 +305,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     % I/O
     p.   prefix = '';                                           % For automatic output filenames. If empty: scan number
     p.   suffix = '';                                      % Optional suffix for reconstruction 
-    p.   scan_string_format = param_input.scan_string_format;                          % format for scan string generation, it is used e.g for plotting and data saving 
+    p.   scan_string_format = param_input.scan_format;                          % format for scan string generation, it is used e.g for plotting and data saving 
     p.   base_path = strcat(param_input.base_path);                                  % base path : used for automatic generation of other paths 
 
     p.   specfile = '';                                         % Name of spec file to get motor positions and check end of scan, defaut is p.spec_file == p.base_path;
@@ -580,7 +580,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     eng.extraPrintInfo = strcat('Scan',num2str(p.scan_number(1)));
     [eng.fout, p.suffix] = generateResultDir(eng, resultDir, param_input.output_dir_suffix);
     [p, ~] = core.append_engine(p, eng);    % Adds this engine to the reconstruction process
-
+    
     %% Run the reconstruction
     tic
     

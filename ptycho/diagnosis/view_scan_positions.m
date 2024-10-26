@@ -16,7 +16,7 @@ aobject = (aobject  - range(1)) / (range(2) - range(1));
 Np_o = size(object);
 grids = {(-ceil(Np_o(2)/2):ceil(Np_o(2)/2)-1)*scale(2), ...
          (-ceil(Np_o(1)/2):ceil(Np_o(1)/2)-1)*scale(1)}; 
-imagesc(grids{:}, aobject, [-2, 1]); % reduce contrast 
+imagesc(grids{:}, aobject, [-2, 3]); % reduce contrast 
 colormap bone 
 axis xy
 hold on 

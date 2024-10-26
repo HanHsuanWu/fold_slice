@@ -9,16 +9,16 @@ scriptfolder = 'C:\Users\hanhsuan\Documents\GitHub\fold_slice\ptycho';
 addpath(strcat(scriptfolder,'\utils_electron_from_huozhi'));
 
 % Step 2: load data
-data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20241009_AlGaAs-90s_arm\trial6\'; %change this
+data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20241010_AlGaAs-30s_arm\trial4\'; %change this
 data_dir = strrep(data_dir,'\','/');
-filename = 'ALGAAS-6.npy';
+filename = 'ALGAAS30-4.npy';
 h5_suf = 'mask';
 scan_number = 1; %Ptychoshelves needs
 bin = 2;
-cutoff = 600;
+%cutoff = 600;
 %crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
 % Positive is up and left.
-shift_dp = [4,2]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
+shift_dp = [0,0]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
 dp_size = 800; % Initial size of diffraction pattern
 
 
@@ -106,7 +106,7 @@ else
 end
 
 %cutoff cbed with circular mask
-dp1 = applyCircularCutoff(dp1, cutoff);
+%dp1 = applyCircularCutoff(dp1, cutoff);
 pacbed2 = mean(dp1, [3 4]);
 figure(); imagesc(pacbed2); colorbar; axis image;
 
@@ -161,7 +161,7 @@ else
 end
 
 %cutoff cbed with circular mask
-dp = applyCircularCutoff(dp, cutoff);
+%dp = applyCircularCutoff(dp, cutoff);
 
 % bin / pad
 %%% bin 4d
@@ -210,11 +210,11 @@ radius = exp_p.rbf;  % Adjust the radius as needed
 
 % Draw the circle and it's center
 rectangle('Position', [centerX - radius, centerY - radius, 2*radius, 2*radius], ...
-          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 2);
+          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 0.5);
 
-circle_radius = 2;
+circle_radius = 0.5;
 rectangle('Position', [centerX - circle_radius/2, centerY - circle_radius/2, circle_radius, circle_radius], ...
-          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 2);
+          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 0.5);
 
 hold off;
 
