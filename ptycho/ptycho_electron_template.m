@@ -303,7 +303,7 @@ eng. update_pos_weight_every = 10; % added by YJ. Allow position weight to be up
 % multilayer extension 
 eng. delta_z = delta_z*ones(Nlayers,1);                     % if not empty, use multilayer ptycho extension , see ML_MS code for example of use, [] == common single layer ptychography , note that delta_z provides only relative propagation distance from the previous layer, ie delta_z can be either positive or negative. If preshift_ML_probe == false, the first layer is defined by position of initial probe plane. It is useful to use eng.momentum for convergence acceleration 
 eng. regularize_layers = reg_layers;           % multilayer extension: 0<R<<1 -> apply regularization on the reconstructed object layers, 0 == no regularization, 0.01 == weak regularization that will slowly symmetrize information content between layers 
-eng. preshift_ML_probe = true;        % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
+eng. preshift_ML_probe = false;        % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
 eng. layer4pos = [];                  % Added by ZC. speficy which layer is used for position correction ; if empty, then default, ceil(Nlayers/2)
 eng. init_layer_select = [];          % Added by YJ. Select layers in the initial object for pre-processing. If empty (default): use all layers.
 eng. init_layer_preprocess = '';      % Added by YJ. Specify how to pre-process initial layers
