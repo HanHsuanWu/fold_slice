@@ -62,6 +62,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     parse_param.addParameter('init_layer_preprocess', '', @ischar)
     parse_param.addParameter('init_layer_interp', 1, @isnumeric)
     parse_param.addParameter('init_layer_append_mode', '', @ischar)
+    parse_param.addParameter('append_pattern', '', @ischar)
     parse_param.addParameter('init_layer_scaling_factor', 1, @isnumeric)
     parse_param.addParameter('layer4pos', 0, @isnumeric)
 
@@ -520,6 +521,10 @@ function [out, eng, data_error] = ptycho_recon(param)
                                               % '' or 'vac' (default): add vacuum layers
                                               % 'edge': append 1st or last layers
                                               % 'avg': append averaged layer
+        eng. append_pattern =  param_input. append_pattern;           % Added by Han
+                                              %'' By default, add to the end then beginning.
+                                              %'end', only add new layers to the end
+                                              %'front', only add new layers to the front
         eng. init_layer_scaling_factor = param_input.init_layer_scaling_factor;   % Added by YJ. Scale all layers. Default: 1 (no scaling). Useful when delta_z is changed
         eng. save_images = {'obj_ph_stack', 'obj_ph_sum', 'probe', 'probe_mag', 'probe_prop_mag'};
     else

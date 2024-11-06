@@ -15,20 +15,20 @@ par.verbose_level = 3;
 par.scan_number = 2;
 par.beam_source = 'electron';
 
-base_path = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20241010_AlGaAs-30s_arm\trial4\';
-%base_path = '/mnt/pgo4/pgo4_v1/Han-Hsuan\Ptychography_test\20241009_AlGaAs-90s_arm\trial6\';
+base_path = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20241010_AlGaAs-30s_arm\trial6bin8\';
+%base_path = '/mnt/pgo4/pgo4_v1/Han-Hsuan\Ptychography_test\20241010_AlGaAs-30s_arm\trial6bin8\';
 par.base_path = strrep(base_path,'\','/');
-par.roi_label = '0_Ndp400mask';
+par.roi_label = '0_Ndp100';
 par.scan_format = '%01d';
-par.Ndp = 400;  % size of cbed
+par.Ndp = 100;  % size of cbed
 par.alpha0 = 25.0; % semi-convergen1e angle (mrad)
-bin = 2;
+bin = 1;
 
 Niter=100;
 
-par.defocus = -200; %overfocus is negative
+par.defocus = -150; %overfocus is negative
 par.energy = 300;
-par.rbf = 400./2/bin;
+par.rbf = 50./2/bin;
 
 par.cen_dp_y = floor(par.Ndp/2)+1;
 par.cen_dp_x = floor(par.Ndp/2)+1;
@@ -56,18 +56,21 @@ par.eng_name = 'GPU_MS';
 par.method = 'MLs';
 par.momentum = 0;
 
-par.Nprobe = 5;
-par.grouping = 32;
+par.Nprobe = 8;
+par.grouping = 25;
 par.apply_multimodal_update = false;
 
-par.Nlayers = 2;
+par.Nlayers = 12;
 par.regularize_layers = 1;
 par.variable_probe_modes = 1;
-par.Ndp_presolve = 400;
+par.Ndp_presolve = par.Ndp;
 par.alpha_max = 25.0;
-par.thickness = 80;
+par.thickness = 240;
 par.beta_probe = 0.3;
-
+par.append_pattern = 'end';           % Added by Han
+                                      %'' By default, add to the end then beginning.
+                                      %'end', only add new layers to the end
+                                      %'front', only add new layers to the front
 %{
 % Step 1.5 (optional): Run a single reconstruction to check parameters
 par.GPU_list = [1];
@@ -106,7 +109,7 @@ saveas(gcf,strcat(par.base_path,num2str(par.scan_number),'/rot_angError.tiff'));
 % Note: Parallel BO is generally recommended for multislice reconstructions
 close all
 
-par.rot_ang = 52.2;
+par.rot_ang = 58.4;
 par.GPU_list = [1];
 
 par.scan_custom_fliplr = 1;
