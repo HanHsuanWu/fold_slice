@@ -46,6 +46,9 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     par_recon.affine_matrix_12 = affine_mat(1,2);
     par_recon.affine_matrix_21 = affine_mat(2,1);
     par_recon.affine_matrix_22 = affine_mat(2,2);
+    par_recon.dp_custom_fliplr = par.scan_custom_fliplr;
+    par_recon.dp_custom_flipud = par.scan_custom_flipud;
+    par_recon.dp_custom_transpose = par.scan_custom_transpose;
     
     par_recon.probe_alpha_max = par.alpha_max;
     par_recon.probe_df = par.defocus;

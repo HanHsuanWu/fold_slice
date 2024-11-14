@@ -9,17 +9,17 @@ scriptfolder = 'C:\Users\hanhsuan\Documents\GitHub\fold_slice\ptycho';
 addpath(strcat(scriptfolder,'\utils_electron_from_huozhi'));
 
 % Step 2: load data
-data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20241010_AlGaAs-30s_arm\trial6bin8\'; %change this
+data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20240817BTO32mrad_bulk\Trial3bin2\'; %change this
 data_dir = strrep(data_dir,'\','/');
-filename = 'ALGAAS30-6_bin8.npy';
+filename = 'Spectrum Image EELS Image_bin2.npy';
 h5_suf = '';
 scan_number = 1; %Ptychoshelves needs
 bin = 1;
 %cutoff = 600;
 %crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
 % Positive is up and left.
-shift_dp = [0,0]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
-dp_size = 100; % Initial size of diffraction pattern
+shift_dp = [4,4]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
+dp_size = 180; % Initial size of diffraction pattern
 
 
 % load(strcat(data_dir,'s01_R3_0_0.mat'))
@@ -28,20 +28,13 @@ dp_size = 100; % Initial size of diffraction pattern
 exp_p = {};
 exp_p.ADU =     1.0;
 exp_p.voltage = 300; % kV
-exp_p.alpha =   25.0; % mrad
 [~,lambda] =    electronwavelength(exp_p.voltage);
-%dk =            0.0367;
-exp_p.defocus = 0.0; % Angst.
-exp_p.scan_step_size = 0.42; % Angst.
 exp_p.nv = dp_size; %final dp pattern size
-% exp_p.rot_ang = 20.0;
 
 % calculate pxiel size (1/A) in diffraction plane
 % [~,lambda]=electronwavelength(exp_p.voltage);
 
-exp_p.rbf=50.0/2/bin; % radius of center disk in pixels
-dk=exp_p.alpha/1e3/exp_p.rbf/lambda;
-%exp_p.rbf = exp_p.alpha/1e3/dk/lambda; % radius of center disk in pixels
+exp_p.rbf=100.0/2/bin; % radius of center disk in pixels
 exp_p.scan_number = scan_number;
 roi_label = strcat('0_Ndp', num2str(exp_p.nv/bin), h5_suf);
 exp_p.roi_label = roi_label;
@@ -76,7 +69,7 @@ end
     dp = double(dp);
 % dp needs to be in [ky kx y x]
 %% Check CBED center of 1 dp
-dp1=dp(:,:,1,1);
+dp1=mean(dp,[3 4])
 %crop to center dp
 if shift_dp(1) >= 0
     row_start = shift_dp(1) + 1;
@@ -172,7 +165,7 @@ if bin > 1
 end
 %% Check Average CBED
 pacbed = mean(dp, [3 4]);
-figure(); imagesc(pacbed.^0.5); colorbar; axis image;
+figure(); imagesc(pacbed.^0.6); colorbar; axis image;
 %% Check virtual BF image
 cutoffbf = exp_p.rbf ;
 bfdata = applyCircularCutoff(dp, cutoffbf);
