@@ -9,16 +9,18 @@ scriptfolder = 'C:\Users\hanhsuan\Documents\GitHub\fold_slice\ptycho';
 addpath(strcat(scriptfolder,'\utils_electron_from_huozhi'));
 
 % Step 2: load data
-data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20240817BTO32mrad_bulk\Trial3bin2\'; %change this
+data_dir = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20250226_200kV_Au_NPs_ptycho\P1_bulk_df0nm_4nmx4nm_100x100pix_10ms_rot0\'; %change this
 data_dir = strrep(data_dir,'\','/');
-filename = 'Spectrum Image EELS Image_bin2.npy';
+filename = 'Acquire Synchronized EELS Image_bin2.npy';
+%filename = '4D_nx64_ny64.npy';
+
 h5_suf = '';
 scan_number = 1; %Ptychoshelves needs
 bin = 1;
 %cutoff = 600;
 %crop_idx = [1,100,1,100]; % start from smaller data [lower y, higher y, lower x, higer x]
 % Positive is up and left.
-shift_dp = [4,4]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
+shift_dp = [0,0]; % [shift ky, shift kx] shift the center of dp by croping kx ky pixels then pad with 0. Has to be even number
 dp_size = 180; % Initial size of diffraction pattern
 
 
@@ -26,15 +28,15 @@ dp_size = 180; % Initial size of diffraction pattern
 
 % input parameters if they are not included in the mat file
 exp_p = {};
-exp_p.ADU =     1.0;
-exp_p.voltage = 300; % kV
+exp_p.ADU = 1;
+exp_p.voltage = 200; % kV
 [~,lambda] =    electronwavelength(exp_p.voltage);
 exp_p.nv = dp_size; %final dp pattern size
 
 % calculate pxiel size (1/A) in diffraction plane
 % [~,lambda]=electronwavelength(exp_p.voltage);
 
-exp_p.rbf=100.0/2/bin; % radius of center disk in pixels
+exp_p.rbf=45.0; % radius of center disk in pixels
 exp_p.scan_number = scan_number;
 roi_label = strcat('0_Ndp', num2str(exp_p.nv/bin), h5_suf);
 exp_p.roi_label = roi_label;
@@ -49,8 +51,8 @@ save(strcat(save_dir,'/exp_para', h5_suf, '.mat'),'exp_p');
 % nv, nv, ny, nx
 f = strcat(data_dir,filename);
 if strcmp(filename(end-2:end), 'npy') 
-    dp = readNPY(f); %GrandArm do not need any permute
-    %dp = permute(dp, [4 3 1 2]); %EMPAD
+    dp = readNPY(f); 
+    %dp = permute(dp, [4 3 2 1]);
     disp(size(dp));
 elseif strcmp(filename(end-2:end), 'mat')
     dp_struct = load(f);
@@ -69,7 +71,8 @@ end
     dp = double(dp);
 % dp needs to be in [ky kx y x]
 %% Check CBED center of 1 dp
-dp1=mean(dp,[3 4])
+%dp1=mean(dp,[3 4]);
+dp1=dp(:,:,1,1);
 %crop to center dp
 if shift_dp(1) >= 0
     row_start = shift_dp(1) + 1;
@@ -101,11 +104,11 @@ end
 
 %cutoff cbed with circular mask
 %dp1 = applyCircularCutoff(dp1, cutoff);
-pacbed2 = mean(dp1, [3 4]);
-figure(); imagesc(pacbed2); colorbar; axis image;
+%pacbed2 = mean(dp1, [3 4]);
+figure(); imagesc(dp1); colorbar; axis image;
 
 % Get the size of the image
-[rows, cols] = size(pacbed2);
+[rows, cols] = size(dp1);
 
 % Define the center and radius of the circle
 centerX = cols / 2;
@@ -114,13 +117,17 @@ radius = exp_p.rbf*bin;  % Adjust the radius as needed
 
 % Draw the circle and it's center
 rectangle('Position', [centerX - radius, centerY - radius, 2*radius, 2*radius], ...
-          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 2);
+          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 0.5);
 
-circle_radius = 2;
+circle_radius = 1;
 rectangle('Position', [centerX - circle_radius/2, centerY - circle_radius/2, circle_radius, circle_radius], ...
-          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 2);
+          'Curvature', [1, 1], 'EdgeColor', 'r', 'LineWidth', 0.5);
 
 hold off;
+
+title('single cbed', 'FontSize', 14);
+saveas(gcf,strcat(data_dir,'/single_cbed.tiff'));
+close();
 
 %% Center all dp
 
@@ -165,7 +172,7 @@ if bin > 1
 end
 %% Check Average CBED
 pacbed = mean(dp, [3 4]);
-figure(); imagesc(pacbed.^0.6); colorbar; axis image;
+figure(); imagesc(pacbed.^0.5); colorbar; axis image;
 %% Check virtual BF image
 cutoffbf = exp_p.rbf ;
 bfdata = applyCircularCutoff(dp, cutoffbf);
@@ -212,6 +219,7 @@ rectangle('Position', [centerX - circle_radius/2, centerY - circle_radius/2, cir
 
 hold off;
 
+title('sqrt2 avg cbed', 'FontSize', 14);
 saveas(gcf,strcat(data_dir,'/cbed.tiff'));
 close();
 %% save file

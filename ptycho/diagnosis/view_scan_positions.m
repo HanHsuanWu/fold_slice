@@ -32,8 +32,8 @@ pos_scales_0 = pos_0 .* scale([2,1]);
 %up = 0.02 * min(range) / mean_err; 
 %rounding_order = 10^floor(log10(up)); 
 %up = ceil(up / rounding_order)*rounding_order;
-scatter( pos_scales(:,1),  pos_scales(:,2),'.r')
-scatter( pos_scales_0(:,1),  pos_scales_0(:,2),10, '.','MarkerEdgeColor','b')
+scatter( pos_scales(:,1),  pos_scales(:,2),20,'.r')
+scatter( pos_scales_0(:,1),  pos_scales_0(:,2),20, '.','MarkerEdgeColor','b')
 
 %hold off 
 axis equal xy tight 

@@ -29,38 +29,40 @@ for i = 1:numGPUs
 end
 
 %%%%%%%%%%%%%%%%%%%% data parameters %%%%%%%%%%%%%%%%%%%%
-base_path = '/mnt/pgo4/pgo4_v1/Han-Hsuan\Ptychography_test\';
+base_path = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\';
 base_path = strrep(base_path,'\','/');
-roi_label = '0_Ndp400mask';
-scan_number = 3;
+base_path = strrep(base_path,'//PanGroupOffice4/PGO4_v1','/mnt/pgo4/pgo4_v1');
+roi_label = '0_Ndp180';
+scan_number = 1;
 scan_string_format = '%01d';
-Ndpx = 400;  % size of cbed
+Ndpx = 180;  % size of cbed
 alpha0 = 25.0; % semi-convergen1e angle (mrad)
-bin = 2;
-rbf = 390.0/2/bin; % radius of the BF disk in cbed. Can be used to calculate dk
-voltage = 300;
-rot_ang = -65; %angle between cbed and scan coord.
+bin = 1;
+rbf = 35.0; % radius of the BF disk in cbed. Can be used to calculate dk
+voltage = 200;
+rot_ang = 0; %angle between cbed and scan coord.
 use_model = [true, true]; %[probe, object] if true use model probe, object
 
-probe_file = '/mnt/pgo4/pgo4_v1\Han-Hsuan\Ptychography_test\20240918_AlGaAs_arm\Trial8\3\roi0_Ndp400mask\MLs_L1_p5_g25_Ndp400_betaP0.1_vp1_Ns2_dz165_reg0.9_centerProbe_rot_ang-65\Niter100.mat';
+probe_file = '\\PanGroupOffice4\PGO4_v1\Han-Hsuan\Ptychography_test\20250222_200kV_AlGaAs_20nm\no_puase\p5_100_4nm_5ms_10nm_rot0\1\roi0_Ndp180\MLs_L1_p5_g8_Ndp180_betaO0.8_betaP0.3_vp1_Ns9_dz20_reg1_rot_ang0_probe_df-80\Niter10.mat';
 probe_file = strrep(probe_file,'\','/');
+probe_file = strrep(probe_file,'//PanGroupOffice4/PGO4_v1','/mnt/pgo4/pgo4_v1');
 probe_file = '';
 
-scan_step_size = 0.408; %angstro
-N_scan_y = 112; %number of scan points
-N_scan_x = 112;
+scan_step_size = 0.4; %angstro
+N_scan_y = 100; %number of scan points
+N_scan_x = 100;
 %%%%%%%%%%%%%%%%%%%% reconstruction parameters %%%%%%%%%%%%%%%%%%%%
-Niter_save_results = 10;
-Niter_plot_results = 10;
+Niter_save_results = 5;
+Niter_plot_results = 5;
 
 
-Nprobe = 5; % # of probe modes
-thickness = 280; % sample thickness in angstrom
-Nlayers = 2; % # of slices for multi-slice, 1 for single-slice
+Nprobe = 6; % # of probe modes
+thickness = 100; % sample thickness in angstrom
+Nlayers = 10; % # of slices for multi-slice, 1 for single-slice
 delta_z = thickness/Nlayers;
-reg_layers = 0.9;
+reg_layers = 0.3;
 
-TotalNiter = 100;
+TotalNiter = 120;
 % %%%%%%%%%%%%%%%%%% initialize data parameters %%%%%%%%%%%%%%%%%%%%
 p = struct();
 p.   verbose_level = 3;                            % verbosity for standard output (0-1 for loops, 2-3 for testing and adjustments, >= 4 for debugging)
@@ -93,7 +95,7 @@ p.   detector.check_2_detpos = [];                          % = []; (ignores)   
 p.   detector.data_prefix = '';                             % Default using current eaccount e.g. e14169_1_
 p.   detector.binning = false;                              % = true to perform 2x2 binning of detector pixels, for binning = N do 2^Nx2^N binning
 p.   detector.upsampling = false;                           % upsample the measured data by 2^data_upsampling, (transposed operator to the binning), it can be used for superresolution in nearfield ptychography or to account for undersampling in a far-field dataset
-p.   crop_pad_init_probe = false;
+p.   crop_init_probe = false;
 p.   detector.burst_frames = 1;                             % number of frames collected per scan position
 
 p.   prepare.data_preparator = 'matlab_aps';                % data preparator; 'python' or 'matlab' or 'matlab_aps'
@@ -101,7 +103,7 @@ p.   prepare.auto_prepare_data = true;                      % if true: prepare d
 p.   prepare.force_preparation_data = true;                 % Prepare dataset even if it exists, it will overwrite the file % Default: @prepare_data_2d
 p.   prepare.store_prepared_data = false;                   % store the loaded data to h5 even for non-external engines (i.e. other than c_solver)
 p.   prepare.prepare_data_function = '';                    % (used only if data should be prepared) custom data preparation function handle;
-p.   prepare.auto_center_data = false;                      % if matlab data preparator is used, try to automatically center the diffraction pattern to keep center of mass in center of diffraction
+p.   prepare.auto_center_data = true;                      % if matlab data preparator is used, try to automatically center the diffraction pattern to keep center of mass in center of diffraction
 
 % Scan positions
 p.   src_positions = 'matlab_pos'; % 'spec', 'orchestra', 'load_from_file', 'matlab_pos' (scan params are defined below) or add new position loaders to +scan/+positions/
@@ -175,7 +177,7 @@ p.   multiple_layers_obj = true;
 % Initial iterate probe
 p.   model_probe = use_model(1);                                   % Use model probe, if false load it from file 
 p.   model.probe_alpha_max = alpha0;                          % Model STEM probe's aperture size
-p.   model.probe_df = 200;                                 % Model STEM probe's defocus
+p.   model.probe_df = 0;                                % Model STEM probe's defocus
 p.   model.probe_c3 = 0;                                    % Model STEM probe's third-order spherical aberration in angstrom
 p.   model.probe_c5 = 0;                                    % Model STEM probe's fifth-order spherical aberration in angstrom
 p.   model.probe_c7 = 0;                                    % Model STEM probe's seventh-order spherical aberration in angstrom
@@ -252,18 +254,18 @@ eng. check_gpu_load = true;            % check available GPU memory before start
 
 % general
 eng. number_iterations = TotalNiter;          % number of iterations for selected method 
-eng. asize_presolve = [400,400];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
+eng. asize_presolve = [Ndpx,Ndpx];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
 eng. align_shared_objects = false;     % before merging multiple unshared objects into one shared, the object will be aligned and the probes shifted by the same distance -> use for alignement and shared reconstruction of drifting scans  
 
 eng. method = 'MLs';                   % choose GPU solver: DM, ePIE, hPIE, MLc, Mls, -- recommended are MLc and MLs
 eng. opt_errmetric = 'L1';            % optimization likelihood - poisson, L1
-eng. grouping = 25;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
+eng. grouping = 8;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
                                        % * for hPIE, ePIE, MLs methods smaller blocks lead to faster convergence, 
                                        % * for MLc the convergence is similar 
                                        % * for DM is has no effect on convergence
 eng. probe_modes  = p.probe_modes;                % Number of coherent modes for probe
 eng. object_change_start = 1;          % Start updating object at this iteration number
-eng. probe_change_start = 11;           % Start updating probe at this iteration number
+eng. probe_change_start = 5;           % Start updating probe at this iteration number
 
 % regularizations
 eng. reg_mu = 0;                       % Regularization (smooting) constant ( reg_mu = 0 for no regularization)
@@ -277,10 +279,10 @@ eng. probe_support_fft = false;       % assume that there is not illumination in
 
 % basic recontruction parameters 
 % PIE / ML methods                    % See for more details: Odstrčil M, et al., Optics express. 2018 Feb 5;26(3):3108-23.
-eng. beta_object = 1.0;               % object step size, larger == faster convergence, smaller == more robust, should not exceed 1
-eng. beta_probe = 0.1;                % probe step size, larger == faster convergence, smaller == more robust, should not exceed 1
+eng. beta_object = 0.8;               % object step size, larger == faster convergence, smaller == more robust, should not exceed 1
+eng. beta_probe = 0.3;                % probe step size, larger == faster convergence, smaller == more robust, should not exceed 1
 eng. beta_LSQ = 0.5;                  % Default is 0.9 use predictive step length                  
-eng. delta_p = 0;                     % LSQ dumping constant, 0 == no preconditioner, 0.1 is usually safe, Preconditioner accelerates convergence and ML methods become approximations of the second order solvers 
+eng. delta_p = 0.1;                     % LSQ dumping constant, 0 == no preconditioner, 0.1 is usually safe, Preconditioner accelerates convergence and ML methods become approximations of the second order solvers 
 eng. momentum = 0;                    % add momentum acceleration term to the MLc method, useful if the probe guess is very poor or for acceleration of multilayer solver, but it is quite computationally expensive to be used in conventional ptycho without any refinement. 
                                       % The momentum method works usually well even with the accelerated_gradients option.  eng.momentum = multiplication gain for velocity, eng.momentum == 0 -> no acceleration, eng.momentum == 0.5 is a good value
                                       % momentum is enabled only when par.Niter < par.accelerated_gradients_start;
@@ -293,17 +295,17 @@ eng. probe_regularization = 0.3;      % Weight factor for the probe update (iner
 % ADVANCED OPTIONS                     See for more details: Odstrčil M, et al., Optics express. 2018 Feb 5;26(3):3108-23.
 % position refinement 
 eng. apply_subpix_shift = true;       % apply FFT-based subpixel shift, it is automatically allowed for position refinement
-eng. probe_position_search = inf;      % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
+eng. probe_position_search = 60;      % iteration number from which the engine will reconstruct probe positions, from iteration == probe_position_search, assume they have to match geometry model with error less than probe_position_error_max
 eng. probe_geometry_model = {'scale', 'asymmetry', 'rotation', 'shear'};  % list of free parameters in the geometry model, choose from: {'scale', 'asymmetry', 'rotation', 'shear'}
 %eng. probe_geometry_model = {};  % list of free parameters in the geometry model, choose from: {'scale', 'asymmetry', 'rotation', 'shear'}
 eng. probe_position_error_max = inf; % maximal expected random position errors, probe prositions are confined in a circle with radius defined by probe_position_error_max and with center defined by original positions scaled by probe_geometry_model
 eng. apply_relaxed_position_constraint = true; % added by YJ. Apply a relaxed constraint to probe positions. default = true. Set to false if there are big jumps in positions.
-eng. update_pos_weight_every = 10; % added by YJ. Allow position weight to be updated multiple times. default = inf: only update once.
+eng. update_pos_weight_every = 20; % added by YJ. Allow position weight to be updated multiple times. default = inf: only update once.
 
 % multilayer extension 
 eng. delta_z = delta_z*ones(Nlayers,1);                     % if not empty, use multilayer ptycho extension , see ML_MS code for example of use, [] == common single layer ptychography , note that delta_z provides only relative propagation distance from the previous layer, ie delta_z can be either positive or negative. If preshift_ML_probe == false, the first layer is defined by position of initial probe plane. It is useful to use eng.momentum for convergence acceleration 
 eng. regularize_layers = reg_layers;           % multilayer extension: 0<R<<1 -> apply regularization on the reconstructed object layers, 0 == no regularization, 0.01 == weak regularization that will slowly symmetrize information content between layers 
-eng. preshift_ML_probe = false;        % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
+eng. preshift_ML_probe = true;        % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
 eng. layer4pos = [];                  % Added by ZC. speficy which layer is used for position correction ; if empty, then default, ceil(Nlayers/2)
 eng. init_layer_select = [];          % Added by YJ. Select layers in the initial object for pre-processing. If empty (default): use all layers.
 eng. init_layer_preprocess = '';      % Added by YJ. Specify how to pre-process initial layers
@@ -315,10 +317,6 @@ eng. init_layer_append_mode = '';     % Added by YJ. Specify how to initialize e
                                       % '' or 'vac' (default): add vacuum layers
                                       % 'edge': append 1st or last layers
                                       % 'avg': append averaged layer
-eng.append_pattern = '';              % Added by Han
-                                      %'' By default, add to the end then beginning.
-                                      %'end', only add new layers to the end
-                                      %'front', only add new layers to the front
 eng. init_layer_scaling_factor = 1;   % Added by YJ. Scale all layers. Default: 1 (no scaling). Useful when delta_z is changed
 
 % other extensions 
@@ -365,7 +363,7 @@ output_dir_suffix = strcat('_rot_ang', num2str(rot_ang),'_probe_df', num2str( p.
 if ~isfolder(eng.fout)
     mkdir(eng.fout);
 end
-copyfile(strcat(exe_path,'/ptycho_electron_Template.m'), strcat(eng.fout,'/ptycho_electron_Template.m'));
+copyfile(strcat(exe_path,'/ptycho_electron_Au.m'), strcat(eng.fout,'/ptycho_electron_Au.m'));
 
 disp('Script copied successfully.');
 

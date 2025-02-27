@@ -506,7 +506,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     if strcmp(eng.name, 'GPU_MS')
         eng. delta_z = param_input.delta_z * ones(param_input.Nlayers, 1);                     % if not empty, use multilayer ptycho extension , see ML_MS code for example of use, [] == common single layer ptychography , note that delta_z provides only relative propagation distance from the previous layer, ie delta_z can be either positive or negative. If preshift_ML_probe == false, the first layer is defined by position of initial probe plane. It is useful to use eng.momentum for convergence acceleration 
         eng. regularize_layers = param_input.regularize_layers;           % multilayer extension: 0<R<<1 -> apply regularization on the reconstructed object layers, 0 == no regularization, 0.01 == weak regularization that will slowly symmetrize information content between layers 
-        eng. preshift_ML_probe = false;       % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
+        eng. preshift_ML_probe = true;       % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
         eng. layer4pos = [];  % Added by ZC. speficy which layer is used for position correction ; if empty, then default, ceil(Nlayers/2)
         if param_input.layer4pos > 0
             eng. layer4pos = [param_input.layer4pos];  % Added by ZC. speficy which layer is used for position correction ; if empty, then default, ceil(Nlayers/2)
