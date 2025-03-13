@@ -54,7 +54,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     parse_param.addParameter('dp_custom_fliplr', 0, @isnumeric)
     parse_param.addParameter('dp_custom_flipud', 0, @isnumeric)
     parse_param.addParameter('dp_custom_transpose', 0, @isnumeric)
-    
+    parse_param.addParameter('probe_change_start', 0, @isnumeric)
     %multislice ptycho parameters
     parse_param.addParameter('Nlayers', 2, @isnumeric)
     parse_param.addParameter('delta_z', 10, @isnumeric)
@@ -289,9 +289,9 @@ function [out, eng, data_error] = ptycho_recon(param)
     p.   scan.ny = param_input.scan_ny;                         % raster scan: number of steps in y
     p.   scan.step_size_x = param_input.scan_step_size_x;       % raster scan: step size (grid spacing)
     p.   scan.step_size_y = param_input.scan_step_size_y;       % raster scan: step size (grid spacing)
-    p.   scan.custom_flip = [param_input.scan_custom_fliplr,...
-                             param_input.scan_custom_flipud,...
-                             param_input.scan_custom_transpose]; % raster scan: apply custom flip [fliplr, flipud, transpose] to positions- similar to eng.custom_data_flip in GPU engines. Added by ZC.
+    p.   scan.custom_flip = [1,... %This should always be 111. Added by Han
+                             1,...
+                             1]; % raster scan: apply custom flip [fliplr, flipud, transpose] to positions- similar to eng.custom_data_flip in GPU engines. Added by ZC.
 
     p.   scan.step_randn_offset = 0;                            % raster scan: relative random offset from the ideal periodic grid to avoid the raster grid pathology 
     p.   scan.b = 0;                                            % fermat: angular offset
@@ -455,7 +455,7 @@ function [out, eng, data_error] = ptycho_recon(param)
                                            % * for DM is has no effect on convergence
     %eng. probe_modes  = 1;                % Number of coherent modes for probe
     eng. object_change_start = 1;          % Start updating object at this iteration number
-    eng. probe_change_start = 1;           % Start updating probe at this iteration number
+    eng. probe_change_start = param_input.probe_change_start;           % Start updating probe at this iteration number
     eng. probe_modes  = p.probe_modes;                % Number of coherent modes for probe
 
     % regularizations
@@ -560,9 +560,9 @@ function [out, eng, data_error] = ptycho_recon(param)
     eng.manual_center_probe = [param_input.manual_center_probe_y,...
                                 param_input.manual_center_probe_x];          % center the probe position in real space before reconstruction is started 
 
-    eng.custom_data_flip = [param_input.dp_custom_fliplr,...
-                            param_input.dp_custom_flipud,...
-                            param_input.dp_custom_transpose];         % apply custom flip of the data [fliplr, flipud, transpose]  - can be used for quick testing of reconstruction with various flips or for reflection ptychography 
+    eng.custom_data_flip = [0,... %This should always be 000. Added by Han
+                            0,...
+                            0];         % apply custom flip of the data [fliplr, flipud, transpose]  - can be used for quick testing of reconstruction with various flips or for reflection ptychography 
     eng.apply_tilted_plane_correction = ''; % if any(p.sample_rotation_angles([1,2]) ~= 0),  this option will apply tilted plane correction. (a) 'diffraction' apply correction into the data, note that it is valid only for "low NA" illumination  Gardner, D. et al., Optics express 20.17 (2012): 19050-19059. (b) 'propagation' - use tilted plane propagation, (c) '' - will not apply any correction 
 
     %added by YJ
