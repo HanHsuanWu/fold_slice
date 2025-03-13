@@ -113,6 +113,7 @@ p = core.find_shared_IDs(p);
 %%% prepare positions
 % Prepare positions, note the output is already in probe positions which
 % are different from object (scan) positions by a minus sign
+
 p = core.ptycho_adjust_positions(p);
 % p.positions_orig = p.positions;
 % p.numpts_orig = p.numpts;

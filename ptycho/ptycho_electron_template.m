@@ -27,32 +27,33 @@ end
 %%%%%%%%%%%%%%%%%%%% data parameters %%%%%%%%%%%%%%%%%%%%
 base_path = '/mnt/pgo4/pgo4_v1/Han-Hsuan\Ptychography_test\Trial1_bulk\';
 base_path = strrep(base_path,'\','/');
-roi_label = '0_Ndp360mask_bin1';
-scan_number = 4;
+roi_label = '0_Ndp180mask_bin2_crop50x50';
+scan_number = 1;
 scan_string_format = '%01d';
-Ndpx = 360;  % size of cbed
+Ndpx = 180;  % size of cbed
 alpha0 = 25.0; % semi-convergence angle (mrad)
-rbf = 149.3/2; % radius of the BF disk in cbed. Can be used to calculate dk
+bin = 2;
+rbf = 149.3/2/bin; % radius of the BF disk in cbed. Can be used to calculate dk
 voltage = 100;
-rot_ang = 76.3; %angle between cbed and scan coord.
+rot_ang = 97.9; %angle between cbed and scan coord.
 
-probe_file = '/mnt/pgo4/pgo4_v1\Han-Hsuan\Ptychography_test\Trial1_bulk\1\roi0_Ndp180mask_bin2_crop50x50\MLs_L1_p6_g25_Ndp180_vp1_Ns16_dz10.25_reg1_centerProbe_rot_ang76.3\Niter1000.mat';
+probe_file = '/mnt/pgo4/pgo4_v1\Han-Hsuan\Ptychography_test\Trial1_bulk\1\roi0_Ndp180mask_bin2_crop50x50\MLs_L1_p6_g25_Ndp180_vp1_Ns8_dz20.5_reg1_centerProbe_rot_ang97.9\Niter1000.mat';
 probe_file = strrep(probe_file,'\','/');
-probe_file = '';
+%probe_file = '';
 
 scan_step_size = 0.4; %angstro
-N_scan_y = 100; %number of scan points
-N_scan_x = 100;
+N_scan_y = 50; %number of scan points
+N_scan_x = 50;
 %%%%%%%%%%%%%%%%%%%% reconstruction parameters %%%%%%%%%%%%%%%%%%%%
 Niter_save_results = 100;
 Niter_plot_results = 100;
 
 
-Nprobe = 2; % # of probe modes
+Nprobe = 6; % # of probe modes
 thickness = 164; % sample thickness in angstrom
-Nlayers = 1; % # of slices for multi-slice, 1 for single-slice
+Nlayers = 16; % # of slices for multi-slice, 1 for single-slice
 delta_z = thickness / Nlayers;
-regularize_layers = 1.0;
+regularize_layers = 0.5;
 
 TotalNiter = 1000;
 % %%%%%%%%%%%%%%%%%% initialize data parameters %%%%%%%%%%%%%%%%%%%%
@@ -160,14 +161,14 @@ p.   artificial_data_file = 'template_artificial_data';     % artificial data pa
 
 % Reconstruction
 % Initial iterate object
-p.   model_object = true;                                   % Use model object, if false load it from file 
+p.   model_object = false;                                   % Use model object, if false load it from file 
 p.   model.object_type = 'rand';                            % specify how the object shall be created; use 'rand' for a random initial guess; use 'amplitude' for an initial guess based on the prepared data
 p.   initial_iterate_object_file{1} = probe_file;                   %  use this mat-file as initial guess of object, it is possible to use wild characters and pattern filling, example: '../analysis/S%05i/wrap_*_1024x1024_1_recons*'
 p.   multiple_layers_obj = true;
 %p.   initial_iterate_object_file{1} = '';
 
 % Initial iterate probe
-p.   model_probe = true;                                   % Use model probe, if false load it from file 
+p.   model_probe = false;                                   % Use model probe, if false load it from file 
 p.   model.probe_alpha_max = alpha0;                          % Model STEM probe's aperture size
 p.   model.probe_df = -50;                                 % Model STEM probe's defocus
 p.   model.probe_c3 = 0;                                    % Model STEM probe's third-order spherical aberration in angstrom
@@ -246,12 +247,12 @@ eng. check_gpu_load = true;            % check available GPU memory before start
 
 % general
 eng. number_iterations = TotalNiter;          % number of iterations for selected method 
-eng. asize_presolve = [360,360];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
+eng. asize_presolve = [180,180];      % crop data to "asize_presolve" size to get low resolution estimate that can be used in the next engine as a good initial guess 
 eng. align_shared_objects = false;     % before merging multiple unshared objects into one shared, the object will be aligned and the probes shifted by the same distance -> use for alignement and shared reconstruction of drifting scans  
 
 eng. method = 'MLs';                   % choose GPU solver: DM, ePIE, hPIE, MLc, Mls, -- recommended are MLc and MLs
 eng. opt_errmetric = 'L1';            % optimization likelihood - poisson, L1
-eng. grouping = 20;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
+eng. grouping = 40;                    % size of processed blocks, larger blocks need more memory but they use GPU more effeciently, !!! grouping == inf means use as large as possible to fit into memory 
                                        % * for hPIE, ePIE, MLs methods smaller blocks lead to faster convergence, 
                                        % * for MLc the convergence is similar 
                                        % * for DM is has no effect on convergence
@@ -300,16 +301,16 @@ eng. regularize_layers = regularize_layers;           % multilayer extension: 0<
 eng. preshift_ML_probe = true;       % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
 eng. layer4pos = [];                  % Added by ZC. speficy which layer is used for position correction ; if empty, then default, ceil(Nlayers/2)
 eng. init_layer_select = [];          % Added by YJ. Select layers in the initial object for pre-processing. If empty (default): use all layers.
-eng. init_layer_preprocess = '';   % Added by YJ. Specify how to pre-process initial layers
+eng. init_layer_preprocess = 'interp';   % Added by YJ. Specify how to pre-process initial layers
                                       % '' or 'all' (default): use all layers (do nothing)
                                       % 'avg': average all layers 
                                       % 'interp': interpolate layers using spline method. Need to specify desired depths in init_layer_interp
-eng. init_layer_interp = [];          % Specify desired depths for interpolation. The depths of initial are [1:Nlayer_init]. If empty (default), no interpolation                 
+eng. init_layer_interp = [1:0.5:8.5];          % Specify desired depths for interpolation. The depths of initial are [1:Nlayer_init]. If empty (default), no interpolation                 
 eng. init_layer_append_mode = '';     % Added by YJ. Specify how to initialize extra layers
                                       % '' or 'vac' (default): add vacuum layers
                                       % 'edge': append 1st or last layers
                                       % 'avg': append averaged layer
-eng. init_layer_scaling_factor = 1;   % Added by YJ. Scale all layers. Default: 1 (no scaling). Useful when delta_z is changed
+eng. init_layer_scaling_factor = 0.5;   % Added by YJ. Scale all layers. Default: 1 (no scaling). Useful when delta_z is changed
 
 % other extensions 
 eng. background = 0;                   % average background scattering level, for OMNI values around 0.3 for 100ms, for flOMNI <0.1 per 100ms exposure, see for more details: Odstrcil, M., et al., Optics letters 40.23 (2015): 5574-5577.
@@ -376,7 +377,7 @@ if ~isfolder(eng.fout)
     mkdir(eng.fout);
 end
 
-copyfile(currentFile, strcat(eng.fout,'ptycho_electron_main_script.m'));
+copyfile strcat(pwd,'/ptycho_electron_template.m') strcat(eng.fout,'/ptycho_electron_template.m');
 
 disp('Script copied successfully.');
 

@@ -493,7 +493,7 @@ function [self, cache] = init_solver(self,par)
         end
         self.object(:,2:end) = [];
     end
-    
+
     if size(self.object,2) < par.Nlayers
         N_add = par.Nlayers - size(self.object,2);
         verbose(0,'Add %d more layers from %d layer(s)', N_add, size(self.object,2))
@@ -517,13 +517,32 @@ function [self, cache] = init_solver(self,par)
                 otherwise
                     error('Invalid init_layer_append_mode!')
             end
-            for ii = 1:N_add
-                if mod(ii, 2) == 1
-                    obj{ll}{end+1} = obj_post; % add slice at the end 
-                else
-                    obj{ll}(2:end+1) = obj{ll};
-                    obj{ll}{1} = obj_pre; % add slice at the beginning 
-                end
+
+            switch par.append_pattern %added by Han to select where to add the slices
+                case '' %By default, add to the end then beginning.
+                    verbose(0,'Default append mode.')
+                    for ii = 1:N_add
+                        if mod(ii, 2) == 1
+                            obj{ll}{end+1} = obj_post; % add slice at the end 
+                        else
+                            obj{ll}(2:end+1) = obj{ll};
+                            obj{ll}{1} = obj_pre; % add slice at the beginning 
+                        end
+                    end
+
+                case 'end'
+                    verbose(0,'Append all new layers to the end')
+                    for ii = 1:N_add
+                        obj{ll}{end+1} = obj_post; % add slice at the end 
+                    end
+                case 'front'
+                    verbose(0,'Append all new layers to the front')
+                    for ii = 1:N_add
+                        obj{ll}(2:end+1) = obj{ll};
+                        obj{ll}{1} = obj_pre; % add slice at the beginning 
+                    end
+                otherwise
+                    error('Invalid append_mode!')
             end
         end
         self.object = cat(1, obj{:}); %combine all scans

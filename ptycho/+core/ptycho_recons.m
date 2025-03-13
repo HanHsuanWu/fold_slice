@@ -169,6 +169,7 @@ finishup = utils.onCleanup(@(x) ptycho_exit(x), p);
             %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
             
             % initialize ptycho and prepare object and probe
+            
             [p, status] = core.initialize_ptycho(p); %p.positions are created here. unit: pxiel
             
             if ~status || prepare_only

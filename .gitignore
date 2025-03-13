@@ -2,4 +2,5 @@
 *.mexw64
 *.dat
 /ptycho/utils/.tmp_procID
+ptycho/+engines/+GPU_MS/+shared/private/get_views_gpu_mex.mexa64
 *.mexa64

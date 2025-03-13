@@ -98,6 +98,10 @@ function [param] = get_defaults
                                        % '' or 'vac' (default): add vacuum layers
                                        % 'edge': append 1st or last layers
                                        % 'avg': append averaged layer
+    param.append_pattern = '';        % Added by Han
+                                      %'' By default, add to the end then beginning.
+                                      %'end', only add new layers to the end
+                                      %'front', only add new layers to the front
     param.init_layer_scaling_factor = 1;  % Added by YJ. Scale all layers. Default: 1 (no scaling). Useful when delta_z is changed
 
     param.initial_probe_rescaling = true;  % find the optimal scaling correction for the provided probe guess in the initial iteration 

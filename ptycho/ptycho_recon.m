@@ -62,6 +62,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     parse_param.addParameter('init_layer_preprocess', '', @ischar)
     parse_param.addParameter('init_layer_interp', 1, @isnumeric)
     parse_param.addParameter('init_layer_append_mode', '', @ischar)
+    parse_param.addParameter('append_pattern', '', @ischar)
     parse_param.addParameter('init_layer_scaling_factor', 1, @isnumeric)
     parse_param.addParameter('layer4pos', 0, @isnumeric)
 
@@ -274,6 +275,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     % scan parameters for option src_positions = 'matlab_pos';
     p.   scan.type = param_input.scan_type;                               % {'round', 'raster', 'round_roi', 'custom'}
     p.   scan.roi_label = param_input.roi_label;                            % For APS data
+    
     p.   scan.format = param_input.scan_format;                      % For APS data format for scan directory generation
 
     p.   scan.radius_in = 0;                                    % round scan: interior radius of the round scan
@@ -304,7 +306,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     % I/O
     p.   prefix = '';                                           % For automatic output filenames. If empty: scan number
     p.   suffix = '';                                      % Optional suffix for reconstruction 
-    p.   scan_string_format = param_input.scan_string_format;                          % format for scan string generation, it is used e.g for plotting and data saving 
+    p.   scan_string_format = param_input.scan_format;                          % format for scan string generation, it is used e.g for plotting and data saving 
     p.   base_path = strcat(param_input.base_path);                                  % base path : used for automatic generation of other paths 
 
     p.   specfile = '';                                         % Name of spec file to get motor positions and check end of scan, defaut is p.spec_file == p.base_path;
@@ -504,7 +506,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     if strcmp(eng.name, 'GPU_MS')
         eng. delta_z = param_input.delta_z * ones(param_input.Nlayers, 1);                     % if not empty, use multilayer ptycho extension , see ML_MS code for example of use, [] == common single layer ptychography , note that delta_z provides only relative propagation distance from the previous layer, ie delta_z can be either positive or negative. If preshift_ML_probe == false, the first layer is defined by position of initial probe plane. It is useful to use eng.momentum for convergence acceleration 
         eng. regularize_layers = param_input.regularize_layers;           % multilayer extension: 0<R<<1 -> apply regularization on the reconstructed object layers, 0 == no regularization, 0.01 == weak regularization that will slowly symmetrize information content between layers 
-        eng. preshift_ML_probe = false;       % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
+        eng. preshift_ML_probe = true;       % multilayer extension: if true, assume that the provided probe is reconstructed in center of the sample and the layers are centered around this position 
         eng. layer4pos = [];  % Added by ZC. speficy which layer is used for position correction ; if empty, then default, ceil(Nlayers/2)
         if param_input.layer4pos > 0
             eng. layer4pos = [param_input.layer4pos];  % Added by ZC. speficy which layer is used for position correction ; if empty, then default, ceil(Nlayers/2)
@@ -519,6 +521,10 @@ function [out, eng, data_error] = ptycho_recon(param)
                                               % '' or 'vac' (default): add vacuum layers
                                               % 'edge': append 1st or last layers
                                               % 'avg': append averaged layer
+        eng. append_pattern =  param_input. append_pattern;           % Added by Han
+                                              %'' By default, add to the end then beginning.
+                                              %'end', only add new layers to the end
+                                              %'front', only add new layers to the front
         eng. init_layer_scaling_factor = param_input.init_layer_scaling_factor;   % Added by YJ. Scale all layers. Default: 1 (no scaling). Useful when delta_z is changed
         eng. save_images = {'obj_ph_stack', 'obj_ph_sum', 'probe', 'probe_mag', 'probe_prop_mag'};
     else
@@ -579,7 +585,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     eng.extraPrintInfo = strcat('Scan',num2str(p.scan_number(1)));
     [eng.fout, p.suffix] = generateResultDir(eng, resultDir, param_input.output_dir_suffix);
     [p, ~] = core.append_engine(p, eng);    % Adds this engine to the reconstruction process
-
+    
     %% Run the reconstruction
     tic
     
