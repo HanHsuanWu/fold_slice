@@ -45,6 +45,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     parse_param.addParameter('delta_p',  0.1, @isnumeric)
     parse_param.addParameter('beta_probe',  1, @isnumeric)
     parse_param.addParameter('beta_object',  1, @isnumeric)
+    parse_param.addParameter('beta_LSQ',  0.5, @isnumeric)
     parse_param.addParameter('opt_errmetric',  'L1', @ischar)
     parse_param.addParameter('reg_mu',  0, @isnumeric)
     parse_param.addParameter('positivity_constraint_object', 0, @isnumeric)
@@ -472,6 +473,7 @@ function [out, eng, data_error] = ptycho_recon(param)
     % PIE / ML methods                    % See for more details: Odstrčil M, et al., Optics express. 2018 Feb 5;26(3):3108-23.
     eng. beta_object = param_input.beta_object;	% object step size, larger == faster convergence, smaller == more robust, should not exceed 1
     eng. beta_probe = param_input.beta_probe;	% probe step size, larger == faster convergence, smaller == more robust, should not exceed 1
+    eng. beta_LSQ = param_input.beta_LSQ;                  % Default is 0.9 use predictive step length   
     eng. delta_p = param_input.delta_p;     % LSQ dumping constant, 0 == no preconditioner, 0.1 is usually safe, Preconditioner accelerates convergence and ML methods become approximations of the second order solvers 
     eng. momentum = param_input.momentum;   % add momentum acceleration term to the MLc method, useful if the probe guess is very poor or for acceleration of multilayer solver, but it is quite computationally expensive to be used in conventional ptycho without any refinement. The momentum method works usually well even with the accelerated_gradients option.  eng.momentum = multiplication gain for velocity, eng.momentum == 0 -> no acceleration, eng.momentum == 0.5 is a good value
     eng. accelerated_gradients_start = inf; % iteration number from which the Nesterov gradient acceleration should be applied, this option is supported only for MLc method. It is very computationally cheap way of convergence acceleration. 

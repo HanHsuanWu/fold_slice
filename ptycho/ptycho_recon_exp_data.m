@@ -14,7 +14,9 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     parser.addParameter('alpha_max',  0 , @isnumeric)  %aperture size in mrad
     parser.addParameter('beam_source', '', @ischar) %for e-ptycho.
     parser.addParameter('probe_prop_dist',  0 , @isnumeric)  %x-ray probe's propagation distance in meters
-
+    parser.addParameter('delta_z', 0, @isnumeric)
+    parser.addParameter('Nlayers', 0, @isnumeric)
+    
     parser.parse(varargin{:})
     r = parser.Results;
 
@@ -52,15 +54,23 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     par_recon.model_probe_prop_dist = par.probe_prop_dist;
     par_recon.beta_probe = par.beta_probe;
     par_recon.beta_object = par.beta_object;
+    par_recon.beta_LSQ = par.beta_LSQ;
     par_recon.delta_p = par.delta_p;
-    par_recon.output_dir_suffix = generate_output_dir_suffix(par.output_dir_suffix_base, varargin, strcmp(par.beam_source, 'electron'));
     par_recon.grouping = par.grouping;
     par_recon.apply_multimodal_update = par.apply_multimodal_update;
     par_recon.probe_change_start = par.probe_change_start;
+    par_recon.energy = par.energy;
+    par_recon.output_dir_suffix = generate_output_dir_suffix(par.output_dir_suffix_base, varargin, strcmp(par.beam_source, 'electron'));
 
-    if strcmp(par_recon.eng_name, 'GPU_MS') && par.thickness > 0
-        par_recon.delta_z = par.thickness / par_recon.Nlayers;
-    end
+
+
+    if strcmp(par_recon.eng_name, 'GPU_MS')
+        if isfield(par_recon, 'delta_z')
+            par_recon.delta_z = par.delta_z;
+        end
+        else
+            par_recon.delta_z = par.thickness / par_recon.Nlayers;
+        end
 
     [~, ~, data_error] = ptycho_recon(par_recon);
 
