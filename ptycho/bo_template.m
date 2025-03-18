@@ -1,3 +1,4 @@
+clear variables
 directory_content = dir; % contains everything of the current directory
 exe_path = directory_content(1).folder; % returns the path that is currently open
 
