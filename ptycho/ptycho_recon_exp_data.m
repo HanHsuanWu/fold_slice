@@ -60,6 +60,10 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     par_recon.apply_multimodal_update = par.apply_multimodal_update;
     par_recon.probe_change_start = par.probe_change_start;
     par_recon.energy = par.energy;
+
+    output_dir_suffix_base = strcat('_rot', num2str(par.rot_ang));
+    par.output_dir_suffix_base = strrep(output_dir_suffix_base,'\','/');
+
     par_recon.output_dir_suffix = generate_output_dir_suffix(par.output_dir_suffix_base, varargin, strcmp(par.beam_source, 'electron'));
 
 
