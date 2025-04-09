@@ -23,7 +23,6 @@ par.base_path = strrep(par.base_path,'//PanGroupOffice4/PGO4_v1','/mnt/pgo4/pgo4
 par.roi_label = '';
 par.scan_format = '%01d';
 par.Ndp = 180;  % size of cbed
-par.alpha0 = 25.0; % semi-convergen1e angle (mrad)
 
 Niter=150;
 
@@ -75,6 +74,7 @@ par.probe_change_start = 5;
 par.Nlayers = 20;
 par.thickness = 200;
 par.delta_z = 15.0;
+par.preshift_ML_probe = false;
 
 par.GPU_list = [1,2,3,4];
 
