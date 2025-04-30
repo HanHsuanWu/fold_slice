@@ -63,6 +63,7 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     par_recon.energy = par.energy;
     par_recon.preshift_ML_probe = par.preshift_ML_probe;
     par_recon.probe_position_search = par.probe_position_search;
+    par_recon.diff_pattern_blur = par.diff_pattern_blur;
 
     output_dir_suffix_base = strcat('_rot', num2str(par.rot_ang));
     par.output_dir_suffix_base = strrep(output_dir_suffix_base,'\','/');
@@ -97,6 +98,8 @@ function [output_dir_suffix] = generate_output_dir_suffix(output_dir_suffix, par
                     par_format = '_rot_ang%0.1f';
                 case 'alpha_max'
                     par_format = '_alpha%0.2fAmrad';
+                case 'Nlayers'
+                    par_format = '_%0.2fAlayers';
             end
             output_dir_suffix = strrep(sprintf([output_dir_suffix, par_format], param_var{i+1}), '\', '/');
         end
