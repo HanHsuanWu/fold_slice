@@ -64,6 +64,7 @@ function [data_error] = ptycho_recon_exp_data(params, varargin)
     par_recon.preshift_ML_probe = par.preshift_ML_probe;
     par_recon.probe_position_search = par.probe_position_search;
     par_recon.diff_pattern_blur = par.diff_pattern_blur;
+    par_recon.detector_upsampling = par.detector_upsampling;
 
     output_dir_suffix_base = strcat('_rot', num2str(par.rot_ang));
     par.output_dir_suffix_base = strrep(output_dir_suffix_base,'\','/');

@@ -76,6 +76,7 @@ par.thickness = 200;
 par.delta_z = 15.0;
 par.preshift_ML_probe = false;
 par.diff_pattern_blur = 1.3; %ELA at 200kev
+par.detector_upsampling = false;
 
 par.GPU_list = [1,2,3,4];
 
